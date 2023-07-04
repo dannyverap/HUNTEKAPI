@@ -1,0 +1,10 @@
+alembic==1.8.1,<1.9
+bcrypt==3.2.2,<3.3
+cryptography==3.4.8,<3.5
+fastapi==0.79.0,<0.80
+psycopg2-binary==2.9.3,<2.10
+pydantic==1.9.1,<1.10
+SQLAlchemy==1.4.39,<1.5
+SQLAlchemy-Utils==0.38.3,<0.39
+uvicorn==0.18.2,<0.19
+python-dotenv==0.21.0,<0.22
