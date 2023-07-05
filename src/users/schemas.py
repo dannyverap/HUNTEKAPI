@@ -5,12 +5,9 @@ from datetime import datetime
 
 # Pydantic
 from pydantic import BaseModel, EmailStr, UUID4, Field
-from src.cost_center.schemas import CostCenterUserBase
 
 # app utilities
 from src.roles.schemas import Role, UserRole
-from src.profiles.schemas import ProfileInDB
-from src.enterprises.schemas import EnterpriseInDB
 
 # Shared properties
 class UserBase(BaseModel):

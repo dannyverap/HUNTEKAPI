@@ -23,6 +23,7 @@ class Settings(BaseSettings):
             return init_settings, env_settings, file_secret_settings
 
     API_V1_STR: str = "/api/v1"
+    JWT_SECRET_KEY: str
     PROJECT_NAME: str
     POSTGRES_SERVER: str
     POSTGRES_USER: str

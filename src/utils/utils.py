@@ -23,8 +23,6 @@ from jwt.exceptions import InvalidTokenError
 
 # src utilities
 from src.config import settings
-from src.enterprises.constants import ConfigCountry
-
 
 def send_email(email_to: str, subject_template="", html_template="", environment={}):
     assert settings.EMAILS_ENABLED, "no provided configuration for email variables"
@@ -290,12 +288,7 @@ def open_html_by_environment(html_name):
 
 
 def get_time_zone():
-    if os.getenv("COUNTRY_CODE") != "mx":
-        time_zone = ConfigCountry.countries.get(os.getenv("COUNTRY_CODE","mx"))["time_zone"]
-    else:
-        time_zone = ConfigCountry.countries["mx"]["time_zone"]
-
-    return time_zone
+    return "America/Mexico_City"
 
 
 def object_to_dict(obj, found=None):
