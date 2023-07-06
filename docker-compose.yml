@@ -12,7 +12,7 @@ services:
       - .:/usr/src/app
     networks:
       - app_network
-      
+
   db:
     image: postgres
     environment:
@@ -21,13 +21,13 @@ services:
       POSTGRES_DB: huntek
     restart: always
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - app_network
 
-pgadmin:
+  pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin4
     ports:
@@ -43,7 +43,7 @@ pgadmin:
 volumes:
   pgdata:
   pgadmin:
-  
+
 networks:
   app_network:
     driver: bridge
