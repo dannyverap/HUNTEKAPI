@@ -15,8 +15,9 @@ from .schemas import UserCreate, UserUpdate
 from src.roles.models import user_roles
 from src.config import settings
 
-#Pydantic
+# Pydantic
 from pydantic import UUID4
+
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_id(self, db: Session, *, id: UUID4) -> Optional[User]:
@@ -29,7 +30,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         new_user = {
             "email": obj_in.email,
             "hashed_password": None,
-            "full_name": obj_in.full_name,
+            "fist_name": obj_in.firstName,
+            "last_name": obj_in.lastName,
         }
 
         if obj_in.password is not None:
@@ -70,5 +72,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if user.is_active and not user.is_blocked:
             return True
         return False
+
 
 user = CRUDUser(User)
