@@ -15,8 +15,9 @@ from .schemas import UserCreate, UserUpdate
 from src.roles.models import user_roles
 from src.config import settings
 
-#Pydantic
+# Pydantic
 from pydantic import UUID4
+
 
 # class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 #     def get_by_id(self, db: Session, *, id: UUID4) -> Optional[User]:
@@ -77,6 +78,8 @@ from pydantic import UUID4
 #-------------------------------------------------------------
 
 
+
+
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_id(self, db: Session, *, id: UUID4) -> Optional[User]:
         return db.query(User).filter(User.id == id).first()
@@ -87,10 +90,15 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         new_user = {
             "email": obj_in.email,
+
             "password": None,
             "firstName": obj_in.firstName,
             "lastName": obj_in.lastName
-        }
+=======
+            "hashed_password": None,
+            "fist_name": obj_in.firstName,
+            "last_name": obj_in.lastName,
+       }
 
         if obj_in.password is not None:
             new_user["password"] = get_password_hash(obj_in.password)
@@ -131,4 +139,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             return True
         return False
 
+
 user = CRUDUser(User)
+=======
+
+user = CRUDUser(User)
+
