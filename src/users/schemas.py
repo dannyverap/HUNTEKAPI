@@ -10,17 +10,31 @@ from pydantic import BaseModel, EmailStr, UUID4, Field
 from src.roles.schemas import Role, UserRole
 
 # Shared properties
+# class UserBase(BaseModel):
+#     email: Optional[EmailStr] = None
+#     is_active: Optional[bool] = False
+#     full_name: Optional[str] = None
+#     is_blocked: bool | None = False
+
+#     class Config:
+#         orm_mode = True
+
+#-----------------------------
+
 class UserBase(BaseModel):
+    firstName: Optional[str]
+    lastName: Optional[str] = None
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = False
-    full_name: Optional[str] = None
-    is_blocked: bool | None = False
+    password: Optional[str]
 
     class Config:
         orm_mode = True
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
+    firstName: Optional[str]
+    lastName: Optional[str] = None
     email: EmailStr
     password: Union[str, None]
 
