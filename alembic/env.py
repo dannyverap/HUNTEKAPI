@@ -27,7 +27,7 @@ import sys
 sys.path = ['', '..'] + sys.path[1:]
 # Include main Model
 from src.users.models import User
-from src.roles.models import Roles, user_roles
+from src.roles.models import Role, user_roles
 target_metadata = User.metadata
 target_metadata = Role.metadata
 target_metadata = user_roles.metadata
