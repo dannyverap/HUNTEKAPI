@@ -29,8 +29,8 @@ from src.roles.models import user_roles
 class User(Base):
     __tablename__ = "users"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-    firstName = Column(String, index=True)
-    lastName = Column(String, index=True)
+    first_name = Column(String, index=True)
+    last_name = Column(String, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=True, default=None)
     is_active = Column(Boolean(), default=False)
