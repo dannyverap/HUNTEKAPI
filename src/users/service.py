@@ -91,8 +91,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         new_user = {
             "email": obj_in.email,
             "password": None,
-            "fist_name": obj_in.firstName,
-            "last_name": obj_in.lastName,
+            "firstName": obj_in.firstName,
+            "lastName": obj_in.lastName,
        }
 
         if obj_in.password is not None:

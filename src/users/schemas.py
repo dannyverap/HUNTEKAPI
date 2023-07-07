@@ -33,7 +33,7 @@ class UserBase(BaseModel):
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
-    firstName: Optional[str]
+    firstName: Optional[str] = None
     lastName: Optional[str] = None
     email: EmailStr
     password: Union[str, None]

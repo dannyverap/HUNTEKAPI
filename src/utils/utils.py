@@ -247,7 +247,7 @@ def send_new_mail_with_ics(email_to: str, username: str, enterprise: BaseModel, 
     )
 
 
-def generate_token(username, action, claims=None):
+def generate_token(email, action, claims=None):
     delta = timedelta(days=10)
     now = datetime.utcnow()
     expires = now + delta
@@ -258,7 +258,7 @@ def generate_token(username, action, claims=None):
             "exp": exp,
             "nbf": now,
             "action": action,
-            "username": username,
+            "email": email,
             "claims": claims,
         },
         settings.SECRET_KEY,

@@ -34,4 +34,4 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=True, default=None)
     is_active = Column(Boolean(), default=False)
-    ##roles = relationship("Role", secondary=user_roles, back_populates="users", uselist=False, lazy="joined")
+    roles = relationship("Role", secondary=user_roles, back_populates="users", uselist=False, lazy="joined")
