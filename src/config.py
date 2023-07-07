@@ -21,7 +21,9 @@ class Settings(BaseSettings):
             file_secret_settings: SettingsSourceCallable,
         ) -> Tuple[SettingsSourceCallable, ...]:
             return init_settings, env_settings, file_secret_settings
+        
 
+    SECRET_KEY:str
     API_V1_STR: str = "/api/v1"
     JWT_SECRET_KEY: str
     PROJECT_NAME: str
