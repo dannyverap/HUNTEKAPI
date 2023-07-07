@@ -22,8 +22,8 @@ from src.roles.schemas import Role, UserRole
 #-----------------------------
 
 class UserBase(BaseModel):
-    firstName: Optional[str]
-    lastName: Optional[str] = None
+    first_name: Optional[str]
+    last_name: Optional[str] = None
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = False
     password: Optional[str]
@@ -33,8 +33,8 @@ class UserBase(BaseModel):
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
-    firstName: Optional[str]
-    lastName: Optional[str] = None
+    first_name: Optional[str]
+    last_name: Optional[str] = None
     email: EmailStr
     password: Union[str, None]
 
