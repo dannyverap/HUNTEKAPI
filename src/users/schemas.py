@@ -44,7 +44,7 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: UUID4
-    roles: Optional[Role]
+    roles: Optional[List[Role]]  
     created_at: datetime | None
     updated_at: datetime | None
 
