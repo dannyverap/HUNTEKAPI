@@ -95,6 +95,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             "last_name": obj_in.last_name,
             "firstName": obj_in.firstName,
             "lastName": obj_in.lastName,
+            "code": obj_in.code
+
 
        }
 
@@ -133,7 +135,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 
     def is_active(self, user: User) -> bool:
-        if user.is_active and not user.is_blocked:
+        if user.is_active:
             return True
         return False
 
