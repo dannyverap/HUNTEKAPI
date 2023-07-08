@@ -74,7 +74,7 @@ async def create_user(
                          firstName=firstName, lastName=lastName)
     user = user_service.create(db, obj_in=user_in)
 
-    password_reset_token = generate_token(user.email, AdditionalClaims.ACTIVATE_ACCOUNT_PASSWORD["name"], {})
+    password_reset_token = generate_token(user.email, PasswordClaims.ACTIVATE_ACCOUNT_PASSWORD["name"], {})
     send_new_account_email_activation_pwd(password=password, email_to=user.email, token=password_reset_token,
                                            background_tasks=background_tasks, username=user.email, first=True)
     db.commit()
