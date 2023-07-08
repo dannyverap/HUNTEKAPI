@@ -55,8 +55,8 @@ async def create_user(
         db: Session = Depends(get_db),
         password: str = Body(...),
         email: EmailStr = Body(...),
-        firstName: str = Body(...),
-        lastName: str = Body(...),
+        first_name: str = Body(...),
+        last_name: str = Body(...),
         background_tasks: BackgroundTasks,
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
@@ -71,7 +71,7 @@ async def create_user(
             detail="The user with this username already exists in the system.",
         )
     user_in = UserCreate(email=email, password=password,
-                         firstName=firstName, lastName=lastName)
+                         first_name=first_name, last_name=last_name)
     user = user_service.create(db, obj_in=user_in)
 
     password_reset_token = generate_token(user.email, AdditionalClaims.ACTIVATE_ACCOUNT_PASSWORD["name"], {})
@@ -188,3 +188,22 @@ def activate_accounts(
                                             algorithm="HS256")
     refresh_token = auth.create_refresh_token(subject=user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
+
+
+##--------------------------------------------
+
+# @users_router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
+# def create_user(
+#         *,
+#         db: Session = Depends(get_db),
+#         user_in: UserCreate,
+# ) -> Any:
+#     user = user_service.get_by_email(db, email=user_in.email)
+#     if user:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="El usuario con este correo electrónico ya existe en el sistema.",
+#         )
+
+#     new_user = user_service.create(db, obj_in=user_in)
+#     return new_user
