@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 # src utilities
 from src.auth.utils import get_password_hash, verify_password
-# from src.roles.constants import Role
-# from src.roles.service import role as role_service
+from src.roles.constants import Role
+from src.roles.service import role as role_service
 from src.database.base import CRUDBase
 from .models import User
 from .schemas import UserCreate, UserUpdate
@@ -90,14 +90,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         new_user = {
             "email": obj_in.email,
-
             "password": None,
-            "firstName": obj_in.firstName,
-            "lastName": obj_in.lastName
-=======
-            "hashed_password": None,
-            "fist_name": obj_in.firstName,
-            "last_name": obj_in.lastName,
+            "first_name": obj_in.first_name, ##habia Error
+            "last_name": obj_in.last_name,
        }
 
         if obj_in.password is not None:
@@ -108,8 +103,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.commit()
         db.refresh(db_obj)
         # Assign default role to new user
-        # role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
-        # role.users.append(db_obj)
+        role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
+        role.users.append(db_obj)
         db.commit()
         return db_obj
 
@@ -141,7 +136,5 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
 
 user = CRUDUser(User)
-=======
 
-user = CRUDUser(User)
 
