@@ -19,7 +19,7 @@ from src.dependencies import get_current_active_user, get_db
 from .service import user as user_service
 # , PlannerUser, ManagerUser, PlannerTravelers, ApproverUsers
 from .schemas import User, UserCreate, UserUpdate
-# from src.users.constants import AdditionalClaims
+from src.users.constants import AdditionalClaims
 from src.utils.utils import send_new_account_email, send_new_account_email_activation_pwd, send_new_account_email_pwd, send_email, open_html_by_environment
 from src.utils.utils import generate_token, verify_token
 from src.config import settings

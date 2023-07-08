@@ -93,6 +93,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             "password": None,
             "first_name": obj_in.first_name, ##habia Error
             "last_name": obj_in.last_name,
+            "firstName": obj_in.firstName,
+            "lastName": obj_in.lastName,
+
        }
 
         if obj_in.password is not None:
