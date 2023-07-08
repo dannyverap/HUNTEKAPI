@@ -1,9 +1,11 @@
 # Python
-from datetime import timedelta
+from datetime import timedelta, datetime
 import secrets
 import string
 from typing import Any, List
 from fastapi_jwt_auth import AuthJWT
+import random
+
 
 # FastAPI
 from fastapi import Body, Depends, BackgroundTasks, Query, Request
@@ -70,15 +72,46 @@ async def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The user with this username already exists in the system.",
         )
+    verification_code = str(random.randint(100000, 999999))
     user_in = UserCreate(email=email, password=password,
-                         firstName=firstName, lastName=lastName)
+                         firstName=firstName, lastName=lastName, code=verification_code)
     user = user_service.create(db, obj_in=user_in)
 
-    password_reset_token = generate_token(user.email, PasswordClaims.ACTIVATE_ACCOUNT_PASSWORD["name"], {})
-    send_new_account_email_activation_pwd(password=password, email_to=user.email, token=password_reset_token,
-                                           background_tasks=background_tasks, username=user.email, first=True)
+    send_new_account_email_activation_pwd(password=password, email_to=user.email,  code=verification_code,
+                                           background_tasks=background_tasks, username=user.firstName, first=True)
     db.commit()
     return user
+
+@users_router.put('/newcode', status_code=status.HTTP_200_OK)
+def send_new_code(
+    request: Request,
+    *,
+    db: Session = Depends(get_db),
+    email: EmailStr = Body(...),
+    background_tasks: BackgroundTasks,
+) -> Any:
+    user = user_service.get_by_email(db, email=email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This user does not exist in the system",
+        )
+
+    new_verification_code = str(random.randint(100000, 999999))
+    user.code = new_verification_code
+    user.created_at = datetime.utcnow()
+    send_new_account_email_activation_pwd(
+        password=user.password,
+        email_to=user.email,
+        code=new_verification_code,
+        background_tasks=background_tasks,
+        username=user.firstName,
+        first=True
+    )
+    db.commit()
+    return {"message": "New verification code sent successfully."}
+
+    
 
 
 @users_router.get("/me", response_model=User, status_code=status.HTTP_200_OK)
@@ -147,44 +180,47 @@ def update_current_user(
 
 
 @users_router.post(
-    "/account-activation", response_model=Token, status_code=status.HTTP_200_OK
+  "/account-activation", response_model=Token, status_code=status.HTTP_200_OK
 )
 def activate_accounts(
         *,
+        request: Request,
+        code: str = Body(...),
         db: Session = Depends(get_db),
-        token: str = Query(...),
-        auth: AuthJWT = Depends(),
+        email: EmailStr = Body(...),
+        auth: AuthJWT=Depends(),
+
 ) -> Any:
-    action = [
-        AdditionalClaims.ACCOUNT_ACTIVATION_ADMIN["name"],
-        AdditionalClaims.ACCOUNT_ACTIVATION_USER["name"],
-    ]
-    email, token = verify_token(token, action)
-    if not email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token",
-        )
     user = user_service.get_by_email(db, email=email)
-    if not user:
+    print(user.created_at)
+    print(datetime.utcnow())
+    if not int(user.code) == int(code):
+        raise HTTPException(
+             status_code=status.HTTP_400_BAD_REQUEST,
+             detail="Invalid code",
+         )
+    elif datetime.utcnow() > user.created_at + timedelta(minutes=2):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token",
+            detail="code expired",
         )
     elif user_service.is_active(user):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Account already activated",
-        )
+         raise HTTPException(
+             status_code=status.HTTP_400_BAD_REQUEST,
+             detail="Account already activated",
+         )
+    
+
     user.is_active = True
     db.commit()
     access_token_expires = timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    claims = {"user_info": {"role": user.roles.name, "id": str(user.id)}}
+        minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    
     access_token = auth.create_access_token(subject=user.email,
                                             fresh=True,
+                                            
                                             expires_time=access_token_expires,
-                                            user_claims=claims,
+                                           
                                             algorithm="HS256")
     refresh_token = auth.create_refresh_token(subject=user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)

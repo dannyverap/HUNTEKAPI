@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_PORT: str
     SQLALCHEMY_DATABASE_URI: Union[PostgresDsn, str, None] = None
+    ACCESS_TOKEN_EXPIRE_MINUTES:str
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:

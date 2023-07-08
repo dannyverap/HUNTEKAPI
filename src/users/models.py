@@ -2,7 +2,7 @@
 import datetime
 from uuid import uuid4
 
-from sqlalchemy import Table, Boolean, Column, String, DateTime, ForeignKey, ARRAY
+from sqlalchemy import Table, Boolean, Column, String, DateTime, ForeignKey, ARRAY, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -34,4 +34,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=True, default=None)
     is_active = Column(Boolean(), default=False)
+    code = Column(String(), index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
     roles = relationship("Role", secondary=user_roles, back_populates="users", uselist=False, lazy="joined")

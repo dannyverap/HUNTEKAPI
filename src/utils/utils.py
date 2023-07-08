@@ -24,6 +24,7 @@ from jwt.exceptions import InvalidTokenError
 # src utilities
 from src.config import settings
 
+
 def send_email(email_to: str, subject_template="", html_template="", environment={}):
     assert settings.EMAILS_ENABLED, "no provided configuration for email variables"
     message = emails.Message(
@@ -127,31 +128,25 @@ def send_new_account_email(
     )
 
 def send_new_account_email_activation_pwd(
-        email_to: str, username: str, token: str, password: str, background_tasks: BackgroundTasks = None, first: bool = False
+    email_to: str, username: str, code: str, password: str, background_tasks: BackgroundTasks = None, first: bool = False
 ):
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - New account for user {username}"
     template_str = open_html_by_environment("new_activation_pwd.html")
-    if hasattr(token, "decode"):
-        use_token = token.decode()
-    else:
-        use_token = token
+
     server_host = settings.SERVER_HOST
-    frontend_url = settings.FRONTEND_VALIDATION_URL
-    link = f"{frontend_url}/auth/activate/{use_token}?login=true&first={first}"
-    background_tasks.add_task(
-        send_email,
-        email_to,
-        subject,
-        template_str,
-        {
-            "project_name": settings.PROJECT_NAME,
-            "username": username,
-            "email": email_to,
-            "link": link,
-            "password": password,
-        },
-    )
+    frontend_url = 'nada'
+    link = f"{frontend_url}/auth/activate?login=true&first={first}"
+    environment = {
+        "project_name": project_name,
+        "username": username,
+        "email": email_to,
+        "link": link,
+        "password": password,
+        "code": code,
+    }
+    background_tasks.add_task(send_email, email_to, subject, template_str, environment)
+
 
 def send_new_account_email_pwd(
         email_to: str,
