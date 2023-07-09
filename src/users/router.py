@@ -114,34 +114,6 @@ def send_new_code(
     return {"message": "New verification code sent successfully."}
 
 
-@users_router.put('/recoverypassword', status_code=status.HTTP_200_OK)
-def recovery_password(
-    request: Request,
-    *,
-    db: Session = Depends(get_db),
-    email: EmailStr = Body(...),
-    background_tasks: BackgroundTasks,
-) -> Any:
-    user = user_service.get_by_email(db, email=email)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This user does not exist in the system",
-        )
-
-    recovery_password_token = generate_token(
-        email=email, action=AdditionalClaims.ACCOUNT_RECOVERY_PASSWORD_USER["name"], claims={})
-
-    send_reset_password_email(
-        email_to=user.email,
-        username=user.first_name,
-        token=recovery_password_token,
-        background_tasks=background_tasks,
-    )
-    db.commit()
-    return {"message": "New recover link sent successfully."}
-
-
 @users_router.get("/me", response_model=User, status_code=status.HTTP_200_OK)
 def get_current_user(
         db: Session = Depends(get_db),
