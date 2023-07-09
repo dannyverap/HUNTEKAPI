@@ -19,19 +19,19 @@ def login(db, authorize, email, password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not CRUDUser(User).is_active(user):
         raise HTTPException(status_code=400, detail="Inactive user")
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 
-    if not user.roles:
-        role = "traveler"
-    else:
-        role = user.roles.name
+    # if not user.roles:
+    #     role = "traveler"
+    # else:
+    #     role = user.roles.name
 
-    claims = {"user_info": {"role": role, "id": str(user.id)}}
+    # claims = {"user_info": {"role": role, "id": str(user.id)}}
     access_token = authorize.create_access_token(
         subject=user.email,
         fresh=True,
         expires_time=access_token_expires,
-        user_claims=claims,
+        
         algorithm=settings.ALGORITHM,
     )
     refresh_token = authorize.create_refresh_token(subject=user.email)

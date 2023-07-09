@@ -73,16 +73,12 @@ async def create_user(
             detail="The user with this username already exists in the system.",
         )
     verification_code = str(random.randint(100000, 999999))
-    user_in = UserCreate(email=email, password=password,
-
-                         firstName=firstName, lastName=lastName, code=verification_code)
-
-                         first_name=first_name, last_name=last_name)
+    user_in = UserCreate(email=email, password=password,first_name=first_name, last_name=last_name, code=verification_code)
 
     user = user_service.create(db, obj_in=user_in)
 
     send_new_account_email_activation_pwd(password=password, email_to=user.email,  code=verification_code,
-                                           background_tasks=background_tasks, username=user.firstName, first=True)
+                                           background_tasks=background_tasks, username=user.first_name, first=True)
     db.commit()
     return user
 
@@ -109,7 +105,7 @@ def send_new_code(
         email_to=user.email,
         code=new_verification_code,
         background_tasks=background_tasks,
-        username=user.firstName,
+        username=user.first_name,
         first=True
     )
     db.commit()
@@ -203,7 +199,7 @@ def activate_accounts(
              status_code=status.HTTP_400_BAD_REQUEST,
              detail="Invalid code",
          )
-    elif datetime.utcnow() > user.created_at + timedelta(minutes=2):
+    elif datetime.utcnow() > user.created_at + timedelta(minutes=5):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="code expired",
@@ -225,7 +221,7 @@ def activate_accounts(
                                             
                                             expires_time=access_token_expires,
                                            
-                                            algorithm="HS256")
+                                            algorithm=settings.ALGORITHM)
     refresh_token = auth.create_refresh_token(subject=user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
 
