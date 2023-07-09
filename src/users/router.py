@@ -22,7 +22,7 @@ from .service import user as user_service
 # , PlannerUser, ManagerUser, PlannerTravelers, ApproverUsers
 from .schemas import User, UserCreate, UserUpdate
 from src.users.constants import AdditionalClaims
-from src.utils.utils import send_new_account_email, send_new_account_email_activation_pwd, send_new_account_email_pwd, send_email, open_html_by_environment
+from src.utils.utils import send_new_account_email, send_new_account_email_activation_pwd, send_new_account_email_pwd, send_email, send_reset_password_email, open_html_by_environment
 from src.utils.utils import generate_token, verify_token
 from src.config import settings
 from src.auth.schemas import Token
@@ -73,14 +73,16 @@ async def create_user(
             detail="The user with this username already exists in the system.",
         )
     verification_code = str(random.randint(100000, 999999))
-    user_in = UserCreate(email=email, password=password,first_name=first_name, last_name=last_name, code=verification_code)
+    user_in = UserCreate(email=email, password=password,
+                         first_name=first_name, last_name=last_name, code=verification_code)
 
     user = user_service.create(db, obj_in=user_in)
 
     send_new_account_email_activation_pwd(password=password, email_to=user.email,  code=verification_code,
-                                           background_tasks=background_tasks, username=user.first_name, first=True)
+                                          background_tasks=background_tasks, username=user.first_name, first=True)
     db.commit()
     return user
+
 
 @users_router.put('/newcode', status_code=status.HTTP_200_OK)
 def send_new_code(
@@ -111,7 +113,30 @@ def send_new_code(
     db.commit()
     return {"message": "New verification code sent successfully."}
 
-    
+
+@users_router.put('/recoverpassword', status_code=status.HTTP_200_OK)
+def recover_password(
+    request: Request,
+    *,
+    db: Session = Depends(get_db),
+    email: EmailStr = Body(...),
+    background_tasks: BackgroundTasks,
+) -> Any:
+    user = user_service.get_by_email(db, email=email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This user does not exist in the system",
+        )
+
+    send_reset_password_email(
+        email_to=user.email,
+        username=user.firstName,
+        # token=user.token,
+        background_tasks=background_tasks,
+    )
+    db.commit()
+    return {"message": "New recover link sent successfully."}
 
 
 @users_router.get("/me", response_model=User, status_code=status.HTTP_200_OK)
@@ -180,7 +205,7 @@ def update_current_user(
 
 
 @users_router.post(
-  "/account-activation", response_model=Token, status_code=status.HTTP_200_OK
+    "/account-activation", response_model=Token, status_code=status.HTTP_200_OK
 )
 def activate_accounts(
         *,
@@ -188,7 +213,7 @@ def activate_accounts(
         code: str = Body(...),
         db: Session = Depends(get_db),
         email: EmailStr = Body(...),
-        auth: AuthJWT=Depends(),
+        auth: AuthJWT = Depends(),
 
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
@@ -196,37 +221,36 @@ def activate_accounts(
     print(datetime.utcnow())
     if not int(user.code) == int(code):
         raise HTTPException(
-             status_code=status.HTTP_400_BAD_REQUEST,
-             detail="Invalid code",
-         )
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid code",
+        )
     elif datetime.utcnow() > user.created_at + timedelta(minutes=5):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="code expired",
         )
     elif user_service.is_active(user):
-         raise HTTPException(
-             status_code=status.HTTP_400_BAD_REQUEST,
-             detail="Account already activated",
-         )
-    
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account already activated",
+        )
 
     user.is_active = True
     db.commit()
     access_token_expires = timedelta(
         minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    
+
     access_token = auth.create_access_token(subject=user.email,
                                             fresh=True,
-                                            
+
                                             expires_time=access_token_expires,
-                                           
+
                                             algorithm=settings.ALGORITHM)
     refresh_token = auth.create_refresh_token(subject=user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
 
 
-##--------------------------------------------
+# --------------------------------------------
 
 # @users_router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
 # def create_user(
