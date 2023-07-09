@@ -22,8 +22,8 @@ from src.roles.schemas import Role, UserRole
 #-----------------------------
 
 class UserBase(BaseModel):
-    firstName: Optional[str]
-    lastName: Optional[str] = None
+    first_name: Optional[str]
+    last_name: Optional[str] = None
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = False
     password: Optional[str]
@@ -33,10 +33,13 @@ class UserBase(BaseModel):
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
-    firstName: Optional[str]
-    lastName: Optional[str] = None
+    first_name: Optional[str]
+    last_name: Optional[str] = None
+    
+   
     email: EmailStr
     password: Union[str, None]
+    code: Optional[str] = None
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
@@ -44,7 +47,7 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: UUID4
-    roles: Optional[Role]
+    roles: Optional[List[Role]]  
     created_at: datetime | None
     updated_at: datetime | None
 

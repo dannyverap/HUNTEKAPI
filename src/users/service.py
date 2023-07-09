@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 # src utilities
 from src.auth.utils import get_password_hash, verify_password
-# from src.roles.constants import Role
-# from src.roles.service import role as role_service
+from src.roles.constants import Role
+from src.roles.service import role as role_service
 from src.database.base import CRUDBase
 from .models import User
 from .schemas import UserCreate, UserUpdate
@@ -91,8 +91,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         new_user = {
             "email": obj_in.email,
             "password": None,
-            "fist_name": obj_in.firstName,
-            "last_name": obj_in.lastName,
+            "first_name": obj_in.first_name, ##habia Error
+            "last_name": obj_in.last_name,
+            
+            "code": obj_in.code
+
+
        }
 
         if obj_in.password is not None:
@@ -130,7 +134,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 
     def is_active(self, user: User) -> bool:
-        if user.is_active and not user.is_blocked:
+        if user.is_active:
             return True
         return False
 
