@@ -93,6 +93,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             "password": None,
             "first_name": obj_in.first_name, ##habia Error
             "last_name": obj_in.last_name,
+            
+            "code": obj_in.code
+
+
        }
 
         if obj_in.password is not None:
@@ -103,8 +107,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.commit()
         db.refresh(db_obj)
         # Assign default role to new user
-        role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
-        role.users.append(db_obj)
+        # role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
+        # role.users.append(db_obj)
         db.commit()
         return db_obj
 
@@ -130,7 +134,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 
     def is_active(self, user: User) -> bool:
-        if user.is_active and not user.is_blocked:
+        if user.is_active:
             return True
         return False
 
