@@ -41,6 +41,7 @@ def send_email(email_to: str, subject_template="", html_template="", environment
         smtp_options["password"] = settings.SMTP_PASSWORD
     response = message.send(to=email_to, render=environment, smtp=smtp_options)
 
+
 def send_email_attachment(email_to: str, subject_template="", html_template="", filename="", attachment=None, environment={}, attachments=[], filenames=[]):
     assert settings.EMAILS_ENABLED, "no provided configuration for email variables"
     message = emails.Message(
@@ -84,10 +85,10 @@ def send_reset_password_email(email_to: str, username: str, token: str, backgrou
     else:
         use_token = token
     server_host = settings.SERVER_HOST
-    frontend_url = settings.FRONTEND_VALIDATION_URL
-    link = f"{frontend_url}/auth/recover/{use_token}"
+    frontend_url = "settings.FRONTEND_VALIDATION_URL"
+    link = f"{frontend_url}/auth/recover/lamejor"
     background_tasks.add_task(
-    send_email,
+        send_email,
         email_to=email_to,
         subject_template=subject,
         html_template=template_str,
@@ -95,9 +96,10 @@ def send_reset_password_email(email_to: str, username: str, token: str, backgrou
             "project_name": settings.PROJECT_NAME,
             "username": username,
             "email": email_to,
+            "token": use_token,
             "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
             "link": link,
-            },
+        },
     )
 
 
@@ -127,6 +129,7 @@ def send_new_account_email(
         },
     )
 
+
 def send_new_account_email_activation_pwd(
     email_to: str, username: str, code: str, password: str, background_tasks: BackgroundTasks = None, first: bool = False
 ):
@@ -145,7 +148,8 @@ def send_new_account_email_activation_pwd(
         "password": password,
         "code": code,
     }
-    background_tasks.add_task(send_email, email_to, subject, template_str, environment)
+    background_tasks.add_task(send_email, email_to,
+                              subject, template_str, environment)
 
 
 def send_new_account_email_pwd(
@@ -170,6 +174,7 @@ def send_new_account_email_pwd(
         },
     )
 
+
 def send_new_reservation_email(email_to: str, username: str, reservation: BaseModel, token: str, profile_id: UUID4, user_email: str):
     template = open_html_by_environment("approve_reservation.html")
     front_url = settings.FRONTEND_VALIDATION_URL
@@ -183,8 +188,10 @@ def send_new_reservation_email(email_to: str, username: str, reservation: BaseMo
         email_to=email_to,
         subject_template="New reservation",
         html_template=template,
-        environment={"user": username, "email": user_email, "link_approval": link_approval,"link_reject": link_reject, **reservation.dict()},
+        environment={"user": username, "email": user_email, "link_approval": link_approval,
+                     "link_reject": link_reject, **reservation.dict()},
     )
+
 
 def send_new_mail_in_reason(email_to: str, username: str, enterprise: BaseModel, reason: BaseModel, dk_number: str):
     template = open_html_by_environment("new_reason.html")
@@ -194,17 +201,21 @@ def send_new_mail_in_reason(email_to: str, username: str, enterprise: BaseModel,
         email_to=email_to,
         subject_template="New mail in reason",
         html_template=template,
-        environment={"user": username, "email": "email", **enterprise.dict(), **reason.dict(), "dk_number": dk_number},
+        environment={"user": username, "email": "email", **
+                     enterprise.dict(), **reason.dict(), "dk_number": dk_number},
     )
 
+
 def send_new_passport_visa_reminder(email_to: str, username: str, document: BaseModel, type: str):
-    template = open_html_by_environment("reminder_passport.html") if type == "passport" else open_html_by_environment("reminder_visa.html")
+    template = open_html_by_environment(
+        "reminder_passport.html") if type == "passport" else open_html_by_environment("reminder_visa.html")
     send_email(
         email_to=email_to,
         subject_template="New reminder",
         html_template=template,
-        environment={"user": username, "email":"email", **document.dict(),},
-    )   
+        environment={"user": username, "email": "email", **document.dict(), },
+    )
+
 
 def send_new_mail_in_agreement(email_to: str, username: str, enterprise: BaseModel, agreement: BaseModel, file: None):
     template = open_html_by_environment("new_agreement.html")
@@ -214,10 +225,11 @@ def send_new_mail_in_agreement(email_to: str, username: str, enterprise: BaseMod
         html_template=template,
         filename="Acuerdo.pdf",
         attachment=file,
-        environment={"user": username, "email": "email", **enterprise.dict(), **agreement.dict()},
+        environment={"user": username, "email": "email",
+                     **enterprise.dict(), **agreement.dict()},
     )
-    
-    
+
+
 def send_new_mail_in_calendar(email_to: str, reservation: BaseModel, files: None, name: str, filenames: list[str]):
     template = open_html_by_environment("new_calendar.html")
     send_email_attachment(
@@ -226,10 +238,10 @@ def send_new_mail_in_calendar(email_to: str, reservation: BaseModel, files: None
         html_template=template,
         filenames=filenames,
         attachments=files,
-        environment={ "name":name,"email":"email", **reservation.dict()},
+        environment={"name": name, "email": "email", **reservation.dict()},
     )
-    
-    
+
+
 def send_new_mail_with_ics(email_to: str, username: str, enterprise: BaseModel, file: None):
     template = open_html_by_environment("approve_reservation.html")
     send_email_attachment(
@@ -264,7 +276,8 @@ def generate_token(email, action, claims=None):
 
 def verify_token(token, action) -> Optional[Tuple]:
     try:
-        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=["HS256"])
         assert decoded_token["action"] in action
         return decoded_token["username"], decoded_token["action"]
     except InvalidTokenError:
@@ -291,8 +304,9 @@ def object_to_dict(obj, found=None):
         found = set()
     mapper = class_mapper(obj.__class__)
     columns = [column.key for column in mapper.columns]
-    get_key_value = lambda c: (c, getattr(obj, c).isoformat()) if isinstance(getattr(obj, c), datetime) else (
-    c, getattr(obj, c))
+
+    def get_key_value(c): return (c, getattr(obj, c).isoformat()) if isinstance(getattr(obj, c), datetime) else (
+        c, getattr(obj, c))
     out = dict(map(get_key_value, columns))
     for name, relation in mapper.relationships.items():
         if relation not in found:
@@ -300,7 +314,8 @@ def object_to_dict(obj, found=None):
             related_obj = getattr(obj, name)
             if related_obj is not None:
                 if relation.uselist:
-                    out[name] = [object_to_dict(child, found) for child in related_obj]
+                    out[name] = [object_to_dict(child, found)
+                                 for child in related_obj]
                 else:
                     out[name] = object_to_dict(related_obj, found)
     return out

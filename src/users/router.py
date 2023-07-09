@@ -78,8 +78,8 @@ async def create_user(
 
     user = user_service.create(db, obj_in=user_in)
 
-    send_new_account_email_activation_pwd(password=password, email_to=user.email,  code=verification_code,
-                                          background_tasks=background_tasks, username=user.first_name, first=True)
+    send_new_account_email_activation_pwd(email_to=user.email, username=user.first_name, code=verification_code, password=password,
+                                          background_tasks=background_tasks,  first=True)
     db.commit()
     return user
 
@@ -114,8 +114,8 @@ def send_new_code(
     return {"message": "New verification code sent successfully."}
 
 
-@users_router.put('/recoverpassword', status_code=status.HTTP_200_OK)
-def recover_password(
+@users_router.put('/recoverypassword', status_code=status.HTTP_200_OK)
+def recovery_password(
     request: Request,
     *,
     db: Session = Depends(get_db),
@@ -129,10 +129,13 @@ def recover_password(
             detail="This user does not exist in the system",
         )
 
+    recovery_password_token = generate_token(
+        email=email, action=AdditionalClaims.ACCOUNT_RECOVERY_PASSWORD_USER["name"], claims={})
+
     send_reset_password_email(
         email_to=user.email,
-        username=user.firstName,
-        # token=user.token,
+        username=user.first_name,
+        token=recovery_password_token,
         background_tasks=background_tasks,
     )
     db.commit()

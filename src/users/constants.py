@@ -12,3 +12,7 @@ class AdditionalClaims:
         "name": "activate_account_user",
         "description": "claim to indicate activate account for the user",
     }
+    ACCOUNT_RECOVERY_PASSWORD_USER = {
+        "name": "recovery_password_user",
+        "description": "claim to indicate recovery password for the user",
+    }
