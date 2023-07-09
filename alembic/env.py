@@ -28,9 +28,11 @@ sys.path = ['', '..'] + sys.path[1:]
 # Include main Model
 from src.users.models import User
 from src.roles.models import Role, user_roles
+from src.user_profile.models import user_profile
 target_metadata = User.metadata
 target_metadata = Role.metadata
 target_metadata = user_roles.metadata
+target_metadata = user_profile.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
