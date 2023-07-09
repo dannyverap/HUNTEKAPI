@@ -65,7 +65,7 @@ def login_alternative(db, email, password):
     elif not CRUDUser(User).is_active(user):
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 
     if not user.roles:
         role = "traveler"
