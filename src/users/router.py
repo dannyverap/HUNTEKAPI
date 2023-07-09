@@ -149,7 +149,7 @@ def get_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.APPLICANT["name"]
+                Role.USER["name"]
             ],
         ),
 ) -> Any:
@@ -199,7 +199,7 @@ def update_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.APPLICANT["name"]
+                Role.USER["name"]
             ],
         ),
 ) -> Any:
