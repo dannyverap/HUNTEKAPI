@@ -192,14 +192,22 @@ def activate_accounts(
 
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
-    print(user.created_at)
-    print(datetime.utcnow())
-    if not int(user.code) == int(code):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="user not exist",
+        )
+    elif user.is_active == True:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='This user is active'
+        )
+    elif not int(user.code) == int(code):
         raise HTTPException(
              status_code=status.HTTP_400_BAD_REQUEST,
              detail="Invalid code",
          )
-    elif datetime.utcnow() > user.created_at + timedelta(minutes=2):
+    elif datetime.utcnow() > user.created_at + timedelta(minutes=5):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="code expired",
@@ -221,7 +229,7 @@ def activate_accounts(
                                             
                                             expires_time=access_token_expires,
                                            
-                                            algorithm="HS256")
+                                            algorithm=settings.ALGORITHM)
     refresh_token = auth.create_refresh_token(subject=user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
 
