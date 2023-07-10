@@ -1,3 +1,7 @@
+from src.user_profile.models import user_profile
+from src.roles.models import Role, user_roles
+from src.users.models import User
+import sys
 import os
 from logging.config import fileConfig
 
@@ -23,12 +27,8 @@ fileConfig(config.config_file_name)
 # target_metadata = None
 
 # Search in full project
-import sys
 sys.path = ['', '..'] + sys.path[1:]
 # Include main Model
-from src.users.models import User
-from src.roles.models import Role, user_roles
-from src.user_profile.models import user_profile
 target_metadata = User.metadata
 target_metadata = Role.metadata
 target_metadata = user_roles.metadata

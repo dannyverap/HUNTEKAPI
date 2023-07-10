@@ -75,9 +75,7 @@ from pydantic import UUID4
 # user = CRUDUser(User)
 
 
-#-------------------------------------------------------------
-
-
+# -------------------------------------------------------------
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -91,13 +89,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         new_user = {
             "email": obj_in.email,
             "password": None,
-            "first_name": obj_in.first_name, ##habia Error
+            "first_name": obj_in.first_name,  # habia Error
             "last_name": obj_in.last_name,
-            
             "code": obj_in.code
-
-
-       }
+        }
 
         if obj_in.password is not None:
             new_user["password"] = get_password_hash(obj_in.password)
@@ -140,5 +135,3 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
 
 user = CRUDUser(User)
-
-
