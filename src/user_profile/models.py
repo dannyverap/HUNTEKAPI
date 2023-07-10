@@ -8,7 +8,7 @@ from src.users.models import User
 import datetime
 
 
-class user_profile(Base):
+class UserProfile(Base):
     __tablename__ = "user_profiles"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
