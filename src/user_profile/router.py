@@ -26,8 +26,8 @@ from src.user_profile.schemas import UserProfile, UserProfileCreate, UserProfile
 
 router = APIRouter()
 
-
-@router.post("/user-profiles/", response_model=UserProfile)
+## user_id debería recibir por query o por params?
+@router.post("/user-profiles/{user_id}", response_model=UserProfile)
 def create_user_profile(
     user_id: UUID,
     profile: UserProfileCreate,
