@@ -22,7 +22,7 @@ def login(db, authorize, email, password):
             status_code=400, detail="Incorrect email or password")
     elif not CRUDUser(User).is_active(user):
         raise HTTPException(status_code=400, detail="Inactive user")
-    print(settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
     access_token_expires = timedelta(
         minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 

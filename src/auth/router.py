@@ -88,7 +88,7 @@ def password_recovery(email: str, background_tasks: BackgroundTasks, db: Session
 
 @auth_router.post("/password/reset")
 def password_reset(token: str = Body(...), password: str = Body(...), db: Session = Depends(get_db)):
-    action = [AdditionalClaims.RESET_PASSWORD["name"]]
+    action = AdditionalClaims.RESET_PASSWORD["name"]
     email, action = verify_token(token, action)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid Token")
@@ -96,7 +96,7 @@ def password_reset(token: str = Body(...), password: str = Body(...), db: Sessio
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     hashed_password = get_password_hash(password)
-    user.hashed_password = hashed_password
+    user.password = hashed_password
     db.commit()
     return JSONResponse(content={"success": True, "msg": "Password Reset"})
 

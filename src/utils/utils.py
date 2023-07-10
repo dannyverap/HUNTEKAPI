@@ -86,7 +86,7 @@ def send_reset_password_email(email_to: str, username: str, token: str, backgrou
         use_token = token
     server_host = settings.SERVER_HOST
     frontend_url = "settings.FRONTEND_VALIDATION_URL"
-    link = f"{frontend_url}/auth/recover/lamejor"
+    link = f"{frontend_url}/auth/recover/{token}"
     background_tasks.add_task(
         send_email,
         email_to=email_to,
@@ -279,7 +279,7 @@ def verify_token(token, action) -> Optional[Tuple]:
         decoded_token = jwt.decode(
             token, settings.SECRET_KEY, algorithms=["HS256"])
         assert decoded_token["action"] in action
-        return decoded_token["username"], decoded_token["action"]
+        return decoded_token["email"], decoded_token["action"]
     except InvalidTokenError:
         return None
 

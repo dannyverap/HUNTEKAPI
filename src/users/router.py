@@ -192,8 +192,6 @@ def activate_accounts(
 
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
-    print(user.created_at)
-    print(datetime.utcnow())
     if not int(user.code) == int(code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
