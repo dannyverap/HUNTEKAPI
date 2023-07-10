@@ -36,5 +36,5 @@ class User(Base):
     is_active = Column(Boolean(), default=False)
     code = Column(String(), index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
     roles = relationship("Role", secondary=user_roles, back_populates="users", uselist=False, lazy="joined")
+    user_profile = relationship("UserProfile", uselist=False, back_populates="user")
