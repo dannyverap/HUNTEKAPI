@@ -21,7 +21,9 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/auth/login/access-token",
     scopes={
         Role.ADMIN["name"]: Role.ADMIN["description"],
-        Role.APPLICANT["name"]: Role.APPLICANT["description"],
+        Role.READ["name"]: Role.READ["description"],
+        Role.EMAIL["name"]: Role.EMAIL["description"],
+        Role.USER["name"]: Role.USER["description"],
     },
 )
 
@@ -33,8 +35,8 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
-        
-        
+
+
 @contextmanager
 def get_db_typer() -> Generator:
     db = None
@@ -76,7 +78,7 @@ def get_current_user(
             detail="Could not validate credentials",
         )
     user = user_service.user.get(db, id=token_data.id)
-    
+
     if not user:
         raise credentials_exception
     if security_scopes.scopes and not token_data.role:
