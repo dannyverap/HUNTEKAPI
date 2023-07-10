@@ -74,20 +74,21 @@ def test_token():
 
 
 @auth_router.get("/password/recovery/{email}")
-def password_recovery(email: str, background_tasks: BackgroundTasks,db: Session = Depends(get_db),):
+def password_recovery(email: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db),):
     user = user_service.get_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     password_reset_token = generate_token(
         email, AdditionalClaims.RESET_PASSWORD["name"]
     )
-    send_reset_password_email(user.email, user.full_name, password_reset_token, background_tasks)
+    send_reset_password_email(email_to=user.email, username=user.first_name,
+                              token=password_reset_token, background_tasks=background_tasks)
     return JSONResponse(content={"success": True, "msg": "Password Recovery Sent"})
 
 
 @auth_router.post("/password/reset")
 def password_reset(token: str = Body(...), password: str = Body(...), db: Session = Depends(get_db)):
-    action = [AdditionalClaims.RESET_PASSWORD["name"]]
+    action = AdditionalClaims.RESET_PASSWORD["name"]
     email, action = verify_token(token, action)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid Token")
@@ -95,13 +96,13 @@ def password_reset(token: str = Body(...), password: str = Body(...), db: Sessio
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     hashed_password = get_password_hash(password)
-    user.hashed_password = hashed_password
+    user.password = hashed_password
     db.commit()
     return JSONResponse(content={"success": True, "msg": "Password Reset"})
 
 
 @auth_router.post("/password/activation")
-def password_activation(activation : ActivationPayload, db: Session = Depends(get_db), authorize: AuthJWT = Depends()):
+def password_activation(activation: ActivationPayload, db: Session = Depends(get_db), authorize: AuthJWT = Depends()):
     action = [AdditionalClaims.ACTIVATE_ACCOUNT_PASSWORD["name"]]
     email, action = verify_token(activation.token, action)
     if not email:
@@ -121,13 +122,14 @@ def password_activation(activation : ActivationPayload, db: Session = Depends(ge
     user.profile.date_of_birth = activation.profile.date_of_birth
     db.commit()
     if activation.first:
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         claims = {"user_info": {"role": user.roles.name, "id": str(user.id)}}
         access_token = authorize.create_access_token(subject=user.email,
-                                                fresh=True,
-                                                expires_time=access_token_expires,
-                                                user_claims=claims,
-                                                algorithm="HS256")
+                                                     fresh=True,
+                                                     expires_time=access_token_expires,
+                                                     user_claims=claims,
+                                                     algorithm="HS256")
         refresh_token = authorize.create_refresh_token(subject=user.email)
         return Token(access_token=access_token, refresh_token=refresh_token)
     return login_service(db, authorize, email, activation.password)
