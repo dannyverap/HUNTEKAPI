@@ -29,10 +29,10 @@ def create_user_profile(
         raise HTTPException(status_code=401, detail="No esta autenticado")
 
     # Verificar que el user_id corresponde al usuario autenticado
-    if profile_data.user_id != user_id:
-        raise HTTPException(status_code=403, detail="No corresponde al usuario")
+    # if profile_data.user_id != user_id:
+    #     raise HTTPException(status_code=403, detail="No corresponde al usuario")
     
-
+    profile_data.user_id = user_id
     # Crear el perfil de usuario utilizando el servicio
     created_profile = user_profile_service.create_user_profile(
         db, profile_data=profile_data

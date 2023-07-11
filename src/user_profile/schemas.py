@@ -5,7 +5,7 @@ from datetime import datetime
 
 class UserProfileBase(BaseModel):
     id: Optional[str]
-    user_id: str
+    user_id: Optional[str]
     profile_picture: str
     applications: List[str]
     interviews: List[str]
@@ -19,7 +19,6 @@ class UserProfileBase(BaseModel):
         orm_mode = True
 
 class UserProfileCreate(UserProfileBase):
-    user_id: str
     profile_picture: str
     applications: List[str]
     interviews: List[str]
