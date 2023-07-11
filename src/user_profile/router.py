@@ -9,6 +9,24 @@ from fastapi_jwt_auth import AuthJWT
 
 user_profile_router = APIRouter()
 
+# Función para verificar si el usuario está autenticado
+def authenticate_user(current_user: UserProfile = Depends(get_current_user)):
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="No está autenticado")
+    return current_user
+
+# Función para verificar si el user_id corresponde al usuario autenticado
+def validate_user_id(user_id: str, current_user: UserProfile = Depends(get_current_user)):
+    if user_id != str(current_user.id):
+        raise HTTPException(status_code=403, detail="No corresponde al usuario")
+
+# Función para obtener el perfil de usuario
+def get_user_profile(db: Session, user_id: str):
+    user_profile = user_profile_service.get_user_profile_by_user_id(db, user_id=user_id)
+    if user_profile is None:
+        raise HTTPException(status_code=404, detail="Perfil de usuario no encontrado")
+    return user_profile
+
 @user_profile_router.get("/saludo")
 def saludar():
     return "Hola"
@@ -17,91 +35,49 @@ def saludar():
 def create_user_profile(
     profile_data: UserProfileCreate,
     user_id: str,
-    current_user: UserProfile = Depends(get_current_user),
+    current_user: UserProfile = Depends(authenticate_user),
     db: Session = Depends(get_db),
     authorize: AuthJWT = Depends()
 ):
-    # Aquí puedes verificar si el usuario está autenticado
-    if current_user is None:
-        raise HTTPException(status_code=401, detail="No está autenticado")
-
-    # Verificar que el user_id corresponde al usuario autenticado
-    if profile_data.user_id != user_id:
-        raise HTTPException(status_code=403, detail="No corresponde al usuario")
-    
-    # Crear el perfil de usuario utilizando el servicio
+    validate_user_id(user_id, current_user)
     created_profile = user_profile_service.create_user_profile(db, profile_data=profile_data)
-    
     return created_profile
 
 @user_profile_router.get("/user-profiles/{user_id}")
-def get_user_profile (
+def get_user_profile(
     user_id: str,
-    current_user: UserProfile = Depends(get_current_user),
+    current_user: UserProfile = Depends(authenticate_user),
     db: Session = Depends(get_db),
     authorize: AuthJWT = Depends()
 ):
-    # Aquí puedes verificar si el usuario está autenticado
-    if current_user is None:
-        raise HTTPException(status_code=401, detail="No está autenticado")
-
-    # Verificar que el user_id corresponde al usuario autenticado
-    if user_id != str(current_user.id):
-        raise HTTPException(status_code=403, detail="No corresponde al usuario")
-    
-    # Obtiene el perfil de usuario utilizando el servicio
-    user_profile = user_profile_service.get_user_profile_by_user_id(db, user_id=user_id)
-    
-    if user_profile is None:
-        raise HTTPException(status_code=404, detail="Perfil de usuario no encontrado")
-    
-    return user_profile
+    validate_user_id(user_id, current_user)
+    return get_user_profile(db, user_id)
 
 @user_profile_router.put("/user-profiles/{user_id}")
-def update_user_profile (
+def update_user_profile(
     user_id: str,
     profile_data: UserProfileUpdate,
-    current_user: UserProfile = Depends(get_current_user),
+    current_user: UserProfile = Depends(authenticate_user),
     db: Session = Depends(get_db),
     authorize: AuthJWT = Depends()
 ):
-    # Aquí puedes verificar si el usuario está autenticado
-    if current_user is None:
-        raise HTTPException(status_code=401, detail="No está autenticado")
-
-    # Verificar que el user_id corresponde al usuario autenticado
-    if user_id != str(current_user.id):
-        raise HTTPException(status_code=403, detail="No corresponde al usuario")
-    
-    # Actualizar el perfil de usuario utilizando el servicio
+    validate_user_id(user_id, current_user)
     updated_profile = user_profile_service.update_user_profile(db, user_id=user_id, profile_data=profile_data)
-    
     if updated_profile is None:
         raise HTTPException(status_code=404, detail="Perfil de usuario no encontrado")
-    
     return updated_profile
 
 @user_profile_router.delete("/user-profiles/{user_id}")
 def delete_user_profile(
     user_id: str,
-    current_user: UserProfile = Depends(get_current_user),
+    current_user: UserProfile = Depends(authenticate_user),
     db: Session = Depends(get_db),
     authorize: AuthJWT = Depends()
 ):
-    # Aquí puedes verificar si el usuario está autenticado
-    if current_user is None:
-        raise HTTPException(status_code=401, detail="No está autenticado")
-
-    # Verificar que el user_id corresponde al usuario autenticado
-    if user_id != str(current_user.id):
-        raise HTTPException(status_code=403, detail="No corresponde al usuario")
-    
-    # Eliminar el perfil de usuario utilizando el servicio
+    validate_user_id(user_id, current_user)
     deleted_profile = user_profile_service.delete_user_profile(db, user_id=user_id)
-    
     if deleted_profile is None:
         raise HTTPException(status_code=404, detail="Perfil de usuario no encontrado")
-    
     return {"message": "Perfil de usuario eliminado exitosamente"}
 
 
