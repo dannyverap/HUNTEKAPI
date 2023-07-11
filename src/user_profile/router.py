@@ -1,65 +1,42 @@
-# FastAPI
-# from fastapi import Body, Depends, BackgroundTasks, Query, Request
-# from fastapi import status, HTTPException, APIRouter, Security
-# from fastapi.responses import JSONResponse
 
-
-# user_profile_router = APIRouter()
-
-# @user_profile_router.get("/user_profile")
-# async def get_user_profile(
-#     db: Session = Depends(get_db),
-#     skip: int = 0,
-#     limit: int = 100,
-#     ##! current user?
-# )
-#     :
-#     return JSONResponse(content={"success":True,"msg":"Base module installed!"})
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from uuid import UUID
+from src.user_profile.models import UserProfile
+from src.user_profile.schemas import UserProfileCreate
+from .service import user_profile_service 
+from src.database.base import CRUDBase
+from src.dependencies import get_db, get_current_user
+from fastapi_jwt_auth import AuthJWT
 
-from src.dependencies import get_db
-from src.user_profile.service import UserProfileService
-from src.user_profile.schemas import UserProfile, UserProfileCreate, UserProfileUpdate
+user_profile_router = APIRouter()
 
-router = APIRouter()
+@user_profile_router.get("/saludo")
+def saludar():
+    return "Hola"
 
 
-@router.post("/user-profiles/", response_model=UserProfile)
+@user_profile_router.post("/user-profiles/{user_id}")
 def create_user_profile(
-    user_id: UUID,
-    profile: UserProfileCreate,
+    profile_data: UserProfileCreate,
+    user_id: str,
+    current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db),
-    profile_service: UserProfileService = Depends()
-) -> UserProfile:
-    return profile_service.create_user_profile(user_id, profile)
+    authorize: AuthJWT = Depends()
+):
+    # Aquí puedes verificar si el usuario está autenticado
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="No esta autenticado")
+
+    # Verificar que el user_id corresponde al usuario autenticado
+    # if profile_data.user_id != user_id:
+    #     raise HTTPException(status_code=403, detail="No corresponde al usuario")
+    
+    profile_data.user_id = user_id
+    # Crear el perfil de usuario utilizando el servicio
+    created_profile = user_profile_service.create_user_profile(
+        db, profile_data=profile_data
+    )
+    
+    return created_profile
 
 
-@router.get("/user-profiles/{user_id}", response_model=UserProfile)
-def get_user_profile(
-    user_id: UUID,
-    db: Session = Depends(get_db),
-    profile_service: UserProfileService = Depends()
-) -> UserProfile:
-    return profile_service.get_user_profile(user_id)
-
-
-@router.put("/user-profiles/{user_id}", response_model=UserProfile)
-def update_user_profile(
-    user_id: UUID,
-    profile: UserProfileUpdate,
-    db: Session = Depends(get_db),
-    profile_service: UserProfileService = Depends()
-) -> UserProfile:
-    return profile_service.update_user_profile(user_id, profile)
-
-
-@router.delete("/user-profiles/{user_id}")
-def delete_user_profile(
-    user_id: UUID,
-    db: Session = Depends(get_db),
-    profile_service: UserProfileService = Depends()
-) -> None:
-    profile_service.delete_user_profile(user_id)
