@@ -13,7 +13,6 @@ user_profile_router = APIRouter()
 @user_profile_router.get("/saludo")
 def saludar():
     return "Hola"
-#-----------------------------
 
 
 @user_profile_router.post("/user-profiles/{user_id}")
@@ -39,4 +38,5 @@ def create_user_profile(
     )
     
     return created_profile
+
 
