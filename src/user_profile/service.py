@@ -25,3 +25,4 @@ class CRUDUserProfileService(CRUDBase[UserProfile, UserProfileCreate, UserProfil
     
 user_profile_service = CRUDUserProfileService(UserProfile)
 
+
