@@ -28,15 +28,16 @@ from src.roles.models import user_roles
 #----------------------------
 
 class User(Base):
-     __tablename__ = "users"
-     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-     first_name = Column(String, index=True)
-     last_name = Column(String, index=True)
-     email = Column(String, unique=True, index=True, nullable=False)
-     password = Column(String, nullable=True, default=None)
-     is_active = Column(Boolean(), default=False)
-     code = Column(String(), index=True)
-     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-     user_profile_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"), unique=True)
-     user_profile = relationship("UserProfile", back_populates="user", uselist=False)
 
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
+    first_name = Column(String, index=True)
+    last_name = Column(String, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password = Column(String, nullable=True, default=None)
+    is_active = Column(Boolean(), default=False)
+    code = Column(String(), index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    roles = relationship("Role", secondary=user_roles, back_populates="users", uselist=True, lazy="joined")
+    user_profile_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"), unique=True)
+    user_profile = relationship("UserProfile", back_populates="user", uselist=False)
+    company_profile = relationship("CompanyProfile", uselist=False, back_populates="user")
