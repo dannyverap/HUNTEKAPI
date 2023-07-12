@@ -39,3 +39,4 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     roles = relationship("Role", secondary=user_roles, back_populates="users", uselist=True, lazy="joined")
     user_profile = relationship("UserProfile", uselist=False, back_populates="user")
+    company_profile = relationship("CompanyProfile", uselist=False, back_populates="user")
