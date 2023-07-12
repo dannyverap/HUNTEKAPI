@@ -101,9 +101,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
-        # Assign default role to new user
-        # role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
-        # role.users.append(db_obj)
+
         db.commit()
         return db_obj
 

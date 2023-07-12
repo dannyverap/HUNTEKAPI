@@ -49,17 +49,16 @@ def read_users(
     return users
 
 
-@users_router.post("/create", response_model=User, status_code=status.HTTP_201_CREATED,
-                   response_model_exclude_none=True)
+@users_router.post("/create", response_model=User, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 async def create_user(
-        request: Request,
-        *,
-        db: Session = Depends(get_db),
-        password: str = Body(...),
-        email: EmailStr = Body(...),
-        first_name: str = Body(...),
-        last_name: str = Body(...),
-        background_tasks: BackgroundTasks,
+    request: Request,
+    *,
+    db: Session = Depends(get_db),
+    password: str = Body(...),
+    email: EmailStr = Body(...),
+    first_name: str = Body(...),
+    last_name: str = Body(...),
+    background_tasks: BackgroundTasks,
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
     if user:
@@ -72,15 +71,27 @@ async def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The user with this username already exists in the system.",
         )
+    
     verification_code = str(random.randint(100000, 999999))
     user_in = UserCreate(email=email, password=password,
-                         first_name=first_name, last_name=last_name, code=verification_code)
+                         first_name=first_name, last_name=last_name, code=verification_code, roles=["postulant"])
 
     user = user_service.create(db, obj_in=user_in)
 
-    send_new_account_email_activation_pwd(email_to=user.email, username=user.first_name, code=verification_code, password=password,
-                                          background_tasks=background_tasks,  first=True)
-    db.commit()
+    send_new_account_email_activation_pwd(
+        email_to=user.email,
+        username=user.first_name,
+        code=verification_code,
+        password=password,
+        background_tasks=background_tasks,
+        first=True,
+    )
+
+    db.refresh(user)  # Actualizar el objeto user con los cambios realizados en la base de datos
+
+    # Convertir los roles en una lista
+    user.roles = list(user.roles)
+
     return user
 
 
@@ -241,7 +252,35 @@ def activate_accounts(
                                             algorithm=settings.ALGORITHM)
     refresh_token = auth.create_refresh_token(subject=user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
+@users_router.put('/addrol', status_code=status.HTTP_200_OK)
+def add_rol(
+    *,
+    request: Request,
+    role_name: str = Body(...),
+    email: str = Body(...),
+    db: Session = Depends(get_db),
+) -> Any:
+    user = user_service.get_by_email(db, email=email)
+    role = role_service.get_by_name(db, name=role_name)
 
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if role is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found",
+        )
+
+    user.roles.append(role)
+    db.commit()
+
+    return {"Message":'User role asigned'}
+    
+    
 
 # --------------------------------------------
 

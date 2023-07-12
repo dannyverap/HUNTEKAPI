@@ -22,3 +22,7 @@ class Role:
         "name": "user",
         "description": "user-specific data or resources",
     }
+    POSTULANT = {
+        "name": "postulant",
+        "description":"postulante para ofertas"
+    }

@@ -319,3 +319,5 @@ def object_to_dict(obj, found=None):
                 else:
                     out[name] = object_to_dict(related_obj, found)
     return out
+
+
