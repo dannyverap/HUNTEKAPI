@@ -36,7 +36,7 @@ class UserCreate(UserBase):
     first_name: Optional[str]
     last_name: Optional[str] = None
     
-   
+    roles: Optional[List[str]] = Field(default_factory=lambda: ["postulant"])
     email: EmailStr
     password: Union[str, None]
     code: Optional[str] = None
@@ -47,7 +47,7 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: UUID4
-    roles: Optional[List[Role]]  
+    roles: Optional[List[UserRole]]  
     created_at: datetime | None
     updated_at: datetime | None
 
