@@ -4,7 +4,6 @@ import secrets
 import string
 from typing import Any, List
 from fastapi_jwt_auth import AuthJWT
-import random
 
 
 # FastAPI
@@ -72,12 +71,11 @@ async def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The user with this username already exists in the system.",
         )
-    verification_code = str(random.randint(100000, 999999))
-    user_in = UserCreate(email=email, password=password,
-                         first_name=first_name, last_name=last_name, code=verification_code)
 
-    user = user_service.create(db, obj_in=user_in)
-
+    new_user = UserCreate(email=email, password=password,
+                          first_name=first_name, last_name=last_name)
+    user = user_service.create(db, new_user=new_user)
+    verification_code = user_service.generate_code(db, user_id=user.id)
     send_new_account_email_activation_pwd(email_to=user.email, username=user.first_name, code=verification_code, password=password,
                                           background_tasks=background_tasks,  first=True)
     db.commit()
@@ -99,13 +97,11 @@ def send_new_code(
             detail="This user does not exist in the system",
         )
 
-    new_verification_code = str(random.randint(100000, 999999))
-    user.code = new_verification_code
-    user.created_at = datetime.utcnow()
+    new_confirmation_code = user_service.generate_code(db, user_id=user.id)
     send_new_account_email_activation_pwd(
         password=user.password,
         email_to=user.email,
-        code=new_verification_code,
+        code=new_confirmation_code,
         background_tasks=background_tasks,
         username=user.first_name,
         first=True
@@ -192,12 +188,27 @@ def activate_accounts(
 
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
-    if not int(user.code) == int(code):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user does not exist in the system"
+        )
+
+    user_token = user_service.get_token_by_id(db, user_id=user.id)
+    if not user_token.confirmation_code:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user does not exist in the system"
+        )
+    elif not int(user_token.confirmation_code) == int(code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid code",
         )
-    elif datetime.utcnow() > user.created_at + timedelta(minutes=5):
+
+    expiration_date_code_plus_10 = datetime.strptime(
+        user_token.expiration_date_code, "%Y-%m-%d %H:%M:%S.%f") + timedelta(minutes=10)
+    if datetime.utcnow() > expiration_date_code_plus_10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="code expired",
@@ -208,19 +219,12 @@ def activate_accounts(
             detail="Account already activated",
         )
 
-    user.is_active = True
+    user_service.activate_user(db, user=user)
+    token = user_service.generate_access_and_refresh_tokens(
+        db, auth=auth, user_id=user.id, email=user.email)
+
     db.commit()
-    access_token_expires = timedelta(
-        minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-
-    access_token = auth.create_access_token(subject=user.email,
-                                            fresh=True,
-
-                                            expires_time=access_token_expires,
-
-                                            algorithm=settings.ALGORITHM)
-    refresh_token = auth.create_refresh_token(subject=user.email)
-    return Token(access_token=access_token, refresh_token=refresh_token)
+    return {"access_token": token.access_token, "refresh_token": token.refresh_token}
 
 
 # --------------------------------------------

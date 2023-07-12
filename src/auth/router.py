@@ -78,11 +78,14 @@ def password_recovery(email: str, background_tasks: BackgroundTasks, db: Session
     user = user_service.get_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     password_reset_token = generate_token(
         email, AdditionalClaims.RESET_PASSWORD["name"]
     )
+
     send_reset_password_email(email_to=user.email, username=user.first_name,
                               token=password_reset_token, background_tasks=background_tasks)
+
     return JSONResponse(content={"success": True, "msg": "Password Recovery Sent"})
 
 
@@ -92,11 +95,14 @@ def password_reset(token: str = Body(...), password: str = Body(...), db: Sessio
     email, action = verify_token(token, action)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid Token")
+
     user = user_service.get_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     hashed_password = get_password_hash(password)
     user.password = hashed_password
+
     db.commit()
     return JSONResponse(content={"success": True, "msg": "Password Reset"})
 

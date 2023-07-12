@@ -1,6 +1,7 @@
 from src.user_profile.models import user_profile
 from src.roles.models import Role, user_roles
 from src.users.models import User
+from src.token.models import Token
 import sys
 import os
 from logging.config import fileConfig
@@ -33,6 +34,7 @@ target_metadata = User.metadata
 target_metadata = Role.metadata
 target_metadata = user_roles.metadata
 target_metadata = user_profile.metadata
+target_metadata = Token.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

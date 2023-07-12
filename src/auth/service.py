@@ -23,8 +23,8 @@ def login(db, authorize, email, password):
     elif not CRUDUser(User).is_active(user):
         raise HTTPException(status_code=400, detail="Inactive user")
 
-    access_token_expires = timedelta(
-        minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    # access_token_expires = timedelta(
+    #     minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 
     # if not user.roles:
     #     role = "traveler"
@@ -32,15 +32,17 @@ def login(db, authorize, email, password):
     #     role = user.roles.name
 
     # claims = {"user_info": {"role": role, "id": str(user.id)}}
-    access_token = authorize.create_access_token(
-        subject=user.email,
-        fresh=True,
-        expires_time=access_token_expires,
-        algorithm=settings.ALGORITHM,
-    )
-    refresh_token = authorize.create_refresh_token(subject=user.email)
+    token = CRUDUser(User).generate_access_and_refresh_tokens(
+        db=db, auth=authorize, user_id=user.id, email=user.email)
+    # access_token = authorize.create_access_token(
+    #     subject=user.email,
+    #     fresh=True,
+    #     expires_time=access_token_expires,
+    #     algorithm=settings.ALGORITHM,
+    # )
+    # refresh_token = authorize.create_refresh_token(subject=user.email)
 
-    return {"access_token": access_token, "refresh_token": refresh_token}
+    return {"access_token": token.access_token, "refresh_token": token.refresh_token}
 
 
 def refresh(authorize: AuthJWT, db):
