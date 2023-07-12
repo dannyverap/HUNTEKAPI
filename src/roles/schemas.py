@@ -3,8 +3,8 @@ from pydantic import UUID4, BaseModel
 
 # Shared properties
 class RoleBase(BaseModel):
-    name: Optional[str]
-    description: Optional[str]
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 # Properties to receive via API on creation

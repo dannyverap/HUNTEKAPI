@@ -3,6 +3,7 @@ import uvicorn
 from functools import lru_cache
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 from src.config import Settings
 from src.router import api_router
 
@@ -15,6 +16,14 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"],
+)
 
 @lru_cache()
 def get_settings():
@@ -31,3 +40,4 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get('/', response_class=RedirectResponse, include_in_schema=False)
 async def docs():
     return RedirectResponse(url='/docs')
+
