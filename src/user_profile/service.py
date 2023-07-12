@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 from src.user_profile.models import UserProfile
 from src.user_profile.schemas import UserProfileCreate, UserProfileUpdate

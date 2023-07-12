@@ -2,11 +2,9 @@ from sqlalchemy import Column, String, Text, ForeignKey, ARRAY, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from uuid import uuid4
-
 from src.database.base import Base
 from src.users.models import User
 import datetime
-
 
 class UserProfile(Base):
     __tablename__ = "user_profiles"
@@ -24,7 +22,6 @@ class UserProfile(Base):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow(),
     )
-    user = relationship("User", back_populates="user_profile", uselist=False) ##! revisar
+    user = relationship("User", back_populates="user_profile", uselist=False)
 
-
-    ## En modelo User va :user_profile = relationship("UserProfile", uselist=False, back_populates="user")
+## En modelo User va :user_profile = relationship("UserProfile", uselist=False, back_populates="user")

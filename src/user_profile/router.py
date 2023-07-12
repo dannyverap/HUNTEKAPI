@@ -20,13 +20,22 @@ def validate_user_id(user_id: str, current_user: UserProfile = Depends(get_curre
     if user_id != str(current_user.id):
         raise HTTPException(status_code=403, detail="No corresponde al usuario")
 
-# Función para obtener el perfil de usuario
-def get_user_profile(db: Session, user_id: str):
+# Función para verificar si el perfil de usuario no existe
+def no_user_profile_exists(db: Session, user_id: str):
     user_profile = user_profile_service.get_user_profile_by_user_id(db, user_id=user_id)
     if user_profile is None:
         raise HTTPException(status_code=404, detail="Perfil de usuario no encontrado")
     return user_profile
 
+
+# Funcion que verifica si el usuario ya tiene un perfil asignado
+def existing_profile(db: Session, user_id: str):
+    existing = user_profile_service.get_user_profile_by_user_id(db, user_id=user_id)
+    if existing:
+        raise HTTPException(status_code=400, detail="El perfil de usuario ya existe")
+    return existing
+
+#////////////////////////////////////////////////////////////////////////////
 
 @user_profile_router.post("/user-profiles/{user_id}")
 def create_user_profile(
@@ -37,20 +46,20 @@ def create_user_profile(
     authorize: AuthJWT = Depends()
 ):
     # Aquí puedes verificar si el usuario está autenticado
-    if current_user is None:
-        raise HTTPException(status_code=401, detail="No esta autenticado")
-
+    authenticate_user(current_user)
     # Verificar que el user_id corresponde al usuario autenticado
-    # if profile_data.user_id != user_id:
-    #     raise HTTPException(status_code=403, detail="No corresponde al usuario")
+    validate_user_id(user_id, current_user)
+    # Verifica si el usuario ya tiene un perfil creaddo
+    existing_profile(db, user_id)
     
     profile_data.user_id = user_id
     # Crear el perfil de usuario utilizando el servicio
     created_profile = user_profile_service.create_user_profile(
         db, profile_data=profile_data
     )
-    
     return created_profile
+
+#////////////////////////////////////////////////////////////////////////////
 
 @user_profile_router.get("/user-profiles/{user_id}")
 def get_user_profile(
@@ -61,6 +70,8 @@ def get_user_profile(
 ):
     validate_user_id(user_id, current_user)
     return user_profile_service.get_user_profile_by_user_id(db, user_id)
+
+#////////////////////////////////////////////////////////////////////////////
 
 @user_profile_router.put("/user-profiles/{user_id}")
 def update_user_profile(
@@ -75,6 +86,8 @@ def update_user_profile(
     if updated_profile is None:
         raise HTTPException(status_code=404, detail="Perfil de usuario no encontrado")
     return updated_profile
+
+#////////////////////////////////////////////////////////////////////////////
 
 @user_profile_router.delete("/user-profiles/{user_id}")
 def delete_user_profile(
