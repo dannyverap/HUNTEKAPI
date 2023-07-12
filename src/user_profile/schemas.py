@@ -2,7 +2,6 @@ from pydantic import BaseModel, UUID4
 from typing import List, Optional
 from datetime import datetime
 
-
 class UserProfileBase(BaseModel):
     id: Optional[str]
     user_id: Optional[str]
