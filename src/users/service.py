@@ -1,6 +1,9 @@
 # Python
 from pprint import pprint
 from typing import Any, Dict, Optional, Union, List
+import random
+from datetime import timedelta, datetime
+from fastapi_jwt_auth import AuthJWT
 
 # SqlAlchemy
 from sqlalchemy.orm import Session
@@ -15,8 +18,9 @@ from .schemas import UserCreate, UserUpdate
 from src.roles.models import user_roles
 from src.config import settings
 
+
 # Pydantic
-from pydantic import UUID4
+from pydantic import UUID4, EmailStr
 
 
 # class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -85,25 +89,28 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
-    def create(self, db: Session, *, obj_in: UserCreate) -> User:
+    def create(self, db: Session, *, user: UserCreate) -> User:
         new_user = {
-            "email": obj_in.email,
+            "email": user.email,
             "password": None,
-            "first_name": obj_in.first_name,  # habia Error
-            "last_name": obj_in.last_name,
-            "code": obj_in.code
+            "first_name": user.first_name,  # habia Error
+            "last_name": user.last_name,
         }
 
-        if obj_in.password is not None:
-            new_user["password"] = get_password_hash(obj_in.password)
+        if user.password is not None:
+            new_user["password"] = get_password_hash(user.password)
 
-        db_obj = User(**new_user)
-        db.add(db_obj)
+        db_new_user = User(**new_user)
+        db.add(db_new_user)
         db.commit()
-        db.refresh(db_obj)
+
+        db.refresh(db_new_user)
+        # Assign default role to new user
+        # role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
+        # role.users.append(db_obj)
 
         db.commit()
-        return db_obj
+        return db_new_user
 
     def update(
         self, db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
@@ -130,6 +137,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if user.is_active:
             return True
         return False
-    
-    
+
+      
 user = CRUDUser(User)

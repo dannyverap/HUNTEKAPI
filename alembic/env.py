@@ -2,6 +2,7 @@ from src.user_profile.models import UserProfile
 from src.company_profile.models import CompanyProfile
 from src.roles.models import Role, user_roles
 from src.users.models import User
+from src.token.models import Token
 import sys
 import os
 from logging.config import fileConfig
@@ -32,7 +33,8 @@ sys.path = ['', '..'] + sys.path[1:]
 # Include main Model
 target_metadata = User.metadata
 target_metadata = Role.metadata
-target_metadata = User.metadata
+target_metadata = Token.metadata
+# target_metadata = User.metadata
 target_metadata = UserProfile.metadata
 target_metadata = CompanyProfile.metadata
 

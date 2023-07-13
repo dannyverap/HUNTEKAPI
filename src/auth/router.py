@@ -1,16 +1,25 @@
+#Python
 from datetime import timedelta
+import json
+
+#FastAPI
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Body, Depends, HTTPException, Security, BackgroundTasks
 from fastapi_jwt_auth import AuthJWT
+from fastapi.security import OAuth2PasswordRequestForm as OAuth2PasswordBearer_2
+from fastapi import Header, Response
+
+
+
+#SqlAlchemy
 from sqlalchemy.orm import Session
 from typing import Any
-from fastapi.security import OAuth2PasswordRequestForm as OAuth2PasswordBearer_2
 from src.config import settings
 
+#srcUtilities
 from .utils import get_password_hash
 from .constants import AdditionalClaims
-
 from .schemas import ActivationPayload, Token, OAuth2PasswordRequestForm
 from .service import login as login_service, login_alternative
 from .service import refresh as refresh_service
@@ -18,15 +27,17 @@ from src.dependencies import get_db
 from src.users.service import user as user_service
 from src.utils.utils import generate_token, send_reset_password_email, verify_token
 
+
 auth_router = APIRouter()
 
 
-@auth_router.post("/login", response_model=Token)
+@auth_router.post("/login", response_model=dict)
 def login(
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
     authorize: AuthJWT = Depends(),
-) -> Any:
+    authorization: str = Header(None),
+) -> dict:
     """
     Authentication to get access token and refresh token
     - Params:
@@ -36,7 +47,7 @@ def login(
         - **access_token**
         - **refresh_token**
     """
-    return login_service(db, authorize, form_data.email, form_data.password)
+    return login_service(db, authorize, authorization, form_data.email, form_data.password)
 
 
 @auth_router.post("/login/access-token", response_model=Token)
@@ -78,25 +89,32 @@ def password_recovery(email: str, background_tasks: BackgroundTasks, db: Session
     user = user_service.get_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     password_reset_token = generate_token(
         email, AdditionalClaims.RESET_PASSWORD["name"]
     )
+
     send_reset_password_email(email_to=user.email, username=user.first_name,
                               token=password_reset_token, background_tasks=background_tasks)
+
     return JSONResponse(content={"success": True, "msg": "Password Recovery Sent"})
 
 
 @auth_router.post("/password/reset")
 def password_reset(token: str = Body(...), password: str = Body(...), db: Session = Depends(get_db)):
     action = AdditionalClaims.RESET_PASSWORD["name"]
+    
     email, action = verify_token(token, action)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid Token")
+
     user = user_service.get_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     hashed_password = get_password_hash(password)
     user.password = hashed_password
+
     db.commit()
     return JSONResponse(content={"success": True, "msg": "Password Reset"})
 
