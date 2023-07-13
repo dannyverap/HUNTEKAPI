@@ -20,5 +20,4 @@ class Token(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     user = relationship("User", back_populates="tokens")
     created_at = Column(DateTime(), default=datetime.utcnow)
-    
-
+        

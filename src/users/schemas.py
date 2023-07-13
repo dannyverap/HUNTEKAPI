@@ -9,16 +9,6 @@ from pydantic import BaseModel, EmailStr, UUID4, Field
 # app utilities
 from src.roles.schemas import Role, UserRole
 
-# Shared properties
-# class UserBase(BaseModel):
-#     email: Optional[EmailStr] = None
-#     is_active: Optional[bool] = False
-#     full_name: Optional[str] = None
-#     is_blocked: bool | None = False
-
-#     class Config:
-#         orm_mode = True
-
 #-----------------------------
 
 class UserBase(BaseModel):
