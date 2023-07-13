@@ -17,10 +17,10 @@ from .models import User
 from .schemas import UserCreate, UserUpdate
 from src.roles.models import user_roles
 from src.config import settings
-from src.token.models import Token
+
 
 # Pydantic
-from pydantic import UUID4
+from pydantic import UUID4, EmailStr
 
 
 # class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -89,17 +89,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
-    def create(self, db: Session, *, new_user: UserCreate) -> User:
+    def create(self, db: Session, *, user: UserCreate) -> User:
         new_user = {
-            "email": new_user.email,
+            "email": user.email,
             "password": None,
-            "first_name": new_user.first_name,  # habia Error
-            "last_name": new_user.last_name,
-            "code": new_user.code
+            "first_name": user.first_name,  # habia Error
+            "last_name": user.last_name,
         }
 
-        if new_user.password is not None:
-            new_user["password"] = get_password_hash(new_user.password)
+        if user.password is not None:
+            new_user["password"] = get_password_hash(user.password)
 
         db_new_user = User(**new_user)
         db.add(db_new_user)
@@ -137,57 +136,32 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             return True
         return False
 
-    def generate_code(self, db: Session, *, user_id: UUID4) -> str:
-        if not user_id:
-            return None
+    # def generate_code(self, db: Session, *, name: str ,user_id: UUID4) -> int:
+    #     token = self.get_token_by_id(db, user_id=user_id)
+        
+    #     if not token:
+    #         new_token = TokenManager.generate_code(name=name, minutes=720)
+    #         return new_token.code
+        
+    #     token(TokenManager.generate_code(name=name, minutes=720))
+    #     return token.code
+            
+        
 
-        token = self.get_token_by_id(db, user_id=user_id)
+        # new_confirmation_code = str(random.randint(100000, 999999))
+        # new_expiration_date = datetime.utcnow()
 
-        new_confirmation_code = str(random.randint(100000, 999999))
-        new_expiration_date = datetime.datetime.utcnow()
+        # if not token:
+        #     token = Token(confirmation_code=new_confirmation_code,
+        #           expiration_date_code=new_expiration_date, user_id=user_id)
+        #     db.add(token)
+        #     db.commit()
+        #     return token.confirmation_code
 
-        if not token:
-            Token(confirmation_code=new_confirmation_code,
-                  expiration_date_code=new_expiration_date, user_id=user_id)
-            db.add(token)
-            db.commit()
-            return token.confirmation_code
+        # token.confirmation_code = new_confirmation_code
+        # token.expiration_date_code = new_expiration_date
 
-        token.confirmation_code = new_confirmation_code
-        token.expiration_date_code = new_expiration_date
-
-        return token.confirmation_code
-
-    def activate_user(self, db: Session, *, user: User) -> None:
-        user.is_active = True
-        token = db.query(Token).filter_by(user_id=user.id).first()
-        token.confirmation_code = None
-        token.expiration_date_code = None
-        db.commit()
-
-    def generate_access_and_refresh_tokens(self, db: Session, *, auth: AuthJWT, user_id: UUID4, email: str) -> Token:
-        if not user_id or email:
-            return None
-
-        token = self.get_token_by_id(db, user_id=user_id)
-
-        access_token_expires = timedelta(
-            minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-        access_token = auth.create_access_token(subject=email,
-                                                fresh=True,
-                                                expires_time=access_token_expires,
-                                                algorithm=settings.ALGORITHM)
-        refresh_token = auth.create_refresh_token(subject=email)
-
-        token.access_token = access_token
-        token.refresh_token = refresh_token
-
-        db.commit()
-        return token
-
-    def get_token_by_id(self, db: Session, *, user_id: str) -> Optional[User]:
-        token = db.query(Token).filter_by(user_id=user_id).first()
-        return token
-
+        # return token.confirmation_code
+        
 
 user = CRUDUser(User)

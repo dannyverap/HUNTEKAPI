@@ -38,7 +38,6 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=True, default=None)
     is_active = Column(Boolean(), default=False)
-    code = Column(String(), index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     tokens = relationship("Token", back_populates="user")

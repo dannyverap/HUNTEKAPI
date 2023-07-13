@@ -4,12 +4,14 @@ import secrets
 import string
 from typing import Any, List
 from fastapi_jwt_auth import AuthJWT
+import json
 
 
 # FastAPI
 from fastapi import Body, Depends, BackgroundTasks, Query, Request
 from fastapi import status, HTTPException, APIRouter, Security
 from fastapi.responses import JSONResponse
+from fastapi import Header, Response
 
 # Pydantic
 from pydantic.networks import EmailStr
@@ -18,7 +20,6 @@ from sqlalchemy.orm import Session
 from src.roles.constants import Role
 from src.dependencies import get_current_active_user, get_db
 from .service import user as user_service
-# , PlannerUser, ManagerUser, PlannerTravelers, ApproverUsers
 from .schemas import User, UserCreate, UserUpdate
 from src.users.constants import AdditionalClaims
 from src.utils.utils import send_new_account_email, send_new_account_email_activation_pwd, send_new_account_email_pwd, send_email, send_reset_password_email, open_html_by_environment
@@ -27,24 +28,26 @@ from src.config import settings
 from src.auth.schemas import Token
 from src.auth.constants import AdditionalClaims as PasswordClaims
 from src.roles.service import role as role_service
+from src.token.service import token as tokens_service
+from src.auth.utils import generate_access_and_refresh_tokens
+
 
 users_router = APIRouter()
 
 
 @users_router.get("/users", response_model=List[User])
 def read_users(
-
         db: Session = Depends(get_db),
         skip: int = 0,
         limit: int = 100,
-        current_user: User = Security(get_current_active_user,
-                                      scopes=[Role.ADMIN["name"]]),
+        # current_user: User = Security(get_current_active_user,
+        #                               scopes=[Role.ADMIN["name"]]),
 ):
     """
     Retrieve users.
     """
-    if current_user.roles.name == Role.ADMIN["name"]:
-        users = user_service.get_multi(db, skip=skip, limit=limit)
+    # if current_user.roles.name == Role.ADMIN["name"]:
+    users = user_service.get_multi(db, skip=skip, limit=limit)
     return users
 
 
@@ -67,17 +70,21 @@ async def create_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Inactive user",
             )
-        raise HTTPException(
+        else: 
+            raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The user with this username already exists in the system.",
         )
 
     new_user = UserCreate(email=email, password=password,
                           first_name=first_name, last_name=last_name)
-    user = user_service.create(db, new_user=new_user)
-    verification_code = user_service.generate_code(db, user_id=user.id)
-    send_new_account_email_activation_pwd(email_to=user.email, username=user.first_name, code=verification_code, password=password,
+    user = user_service.create(db, user=new_user)
+    
+    confirmation_code = tokens_service.create_token(db, order="email_activation", minutes=720, user_id=user.id)
+    
+    send_new_account_email_activation_pwd(email_to=user.email, username=user.first_name, code=confirmation_code, password=password,
                                           background_tasks=background_tasks,  first=True)
+    
     db.commit()
     return user
 
@@ -88,6 +95,7 @@ def send_new_code(
     *,
     db: Session = Depends(get_db),
     email: EmailStr = Body(...),
+    order: str = Body(...),
     background_tasks: BackgroundTasks,
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
@@ -96,8 +104,13 @@ def send_new_code(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This user does not exist in the system",
         )
-
-    new_confirmation_code = user_service.generate_code(db, user_id=user.id)
+    if user.is_active and order == "account_activation":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This user is already active"
+        )
+    new_confirmation_code = tokens_service.create_token(db, order=order, minutes=720, user_id=user.id)
+    
     send_new_account_email_activation_pwd(
         password=user.password,
         email_to=user.email,
@@ -106,6 +119,7 @@ def send_new_code(
         username=user.first_name,
         first=True
     )
+    
     db.commit()
     return {"message": "New verification code sent successfully."}
 
@@ -176,16 +190,15 @@ def update_current_user(
 
 
 @users_router.post(
-    "/account-activation", response_model=Token, status_code=status.HTTP_200_OK
+    "/account-activation", status_code=status.HTTP_200_OK
 )
 def activate_accounts(
         *,
         request: Request,
-        code: str = Body(...),
+        code: int = Body(...),
         db: Session = Depends(get_db),
         email: EmailStr = Body(...),
-        auth: AuthJWT = Depends(),
-
+        authorize: AuthJWT = Depends(),
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
     if not user:
@@ -194,21 +207,18 @@ def activate_accounts(
             detail="This user does not exist in the system"
         )
 
-    user_token = user_service.get_token_by_id(db, user_id=user.id)
-    if not user_token.confirmation_code:
+    token = tokens_service.get_token_by_user_id(db, user_id=user.id)
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user does not exist in the system"
+            detail="Invalid code"
         )
-    elif not int(user_token.confirmation_code) == int(code):
+    elif not token.code == int(code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid code",
         )
-
-    expiration_date_code_plus_10 = datetime.strptime(
-        user_token.expiration_date_code, "%Y-%m-%d %H:%M:%S.%f") + timedelta(minutes=10)
-    if datetime.utcnow() > expiration_date_code_plus_10:
+    elif token.created_at > token.expiration:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="code expired",
@@ -218,13 +228,19 @@ def activate_accounts(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Account already activated",
         )
+        
+    user.is_active = True
+    tokens_service.delete_token(db, token_id=token.id)
+    
 
-    user_service.activate_user(db, user=user)
-    token = user_service.generate_access_and_refresh_tokens(
-        db, auth=auth, user_id=user.id, email=user.email)
+    role = "APPLICANT"
+
+    
+    tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role=role)
 
     db.commit()
-    return {"access_token": token.access_token, "refresh_token": token.refresh_token}
+    return tokens
+    
 
 
 # --------------------------------------------
