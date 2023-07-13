@@ -8,6 +8,7 @@ from pathlib import Path, WindowsPath
 from typing import Optional, Tuple
 from emails.template import JinjaTemplate
 import tempfile
+import random
 
 # Pydantic
 from pydantic import BaseModel, UUID4
