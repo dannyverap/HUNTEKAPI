@@ -3,6 +3,11 @@ class Role:
     Constants for the various roles scoped in the application ecosystem
     """
 
+    ADMIN = {
+        "name": "admin",
+        "description": "admin has all permissions",
+    }
+
     APPLICANT = {
         "name": "applicant",
         "description": "applicant related permissions",
@@ -18,8 +23,5 @@ class Role:
         "description": "company-recuiter related permissions",
     }
 
-    ADMIN = {
-        "name": "admin",
-        "description": "admin has all permissions",
-    }
+    
    

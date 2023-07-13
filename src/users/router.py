@@ -73,7 +73,7 @@ async def create_user(
         else: 
             raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The user with this username already exists in the system.",
+            detail="The user already exists in the system.",
         )
 
     new_user = UserCreate(email=email, password=password,
@@ -148,7 +148,7 @@ def get_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.USER["name"]
+                Role.APPLICANT["name"]
             ],
         ),
 ) -> Any:
@@ -198,7 +198,7 @@ def update_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.USER["name"]
+                Role.APPLICANT["name"]
             ],
         ),
 ) -> Any:

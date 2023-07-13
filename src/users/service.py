@@ -34,7 +34,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         new_user = {
             "email": user.email,
             "password": None,
-            "first_name": user.first_name,  # habia Error
+            "first_name": user.first_name, 
             "last_name": user.last_name,
         }
 
