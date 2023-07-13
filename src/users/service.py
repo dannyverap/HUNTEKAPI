@@ -103,10 +103,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db_new_user = User(**new_user)
         db.add(db_new_user)
         db.commit()
+
         db.refresh(db_new_user)
         # Assign default role to new user
         # role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
         # role.users.append(db_obj)
+
         db.commit()
         return db_new_user
 
@@ -136,32 +138,5 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             return True
         return False
 
-    # def generate_code(self, db: Session, *, name: str ,user_id: UUID4) -> int:
-    #     token = self.get_token_by_id(db, user_id=user_id)
-        
-    #     if not token:
-    #         new_token = TokenManager.generate_code(name=name, minutes=720)
-    #         return new_token.code
-        
-    #     token(TokenManager.generate_code(name=name, minutes=720))
-    #     return token.code
-            
-        
-
-        # new_confirmation_code = str(random.randint(100000, 999999))
-        # new_expiration_date = datetime.utcnow()
-
-        # if not token:
-        #     token = Token(confirmation_code=new_confirmation_code,
-        #           expiration_date_code=new_expiration_date, user_id=user_id)
-        #     db.add(token)
-        #     db.commit()
-        #     return token.confirmation_code
-
-        # token.confirmation_code = new_confirmation_code
-        # token.expiration_date_code = new_expiration_date
-
-        # return token.confirmation_code
-        
-
+      
 user = CRUDUser(User)

@@ -34,10 +34,10 @@ def login(db, authorize, authorization , email, password):
     
     role = "APPLICANT"
 
-    
     tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role=role)
     
     return tokens
+
 
 
 def refresh(authorize: AuthJWT, db):

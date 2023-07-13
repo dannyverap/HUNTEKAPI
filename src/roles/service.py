@@ -27,6 +27,12 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
             ])
             db.commit()
             return db.query(self.model).all()
-
+        
+    def create_role(self, db: Session, role_in: RoleCreate) -> Role:
+        role = self.model(**role_in.dict())
+        db.add(role)
+        db.commit()
+        db.refresh(role)
+        return role
 
 role = CRUDRole(Role)

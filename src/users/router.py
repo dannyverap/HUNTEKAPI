@@ -51,17 +51,17 @@ def read_users(
     return users
 
 
-@users_router.post("/create", response_model=User, status_code=status.HTTP_201_CREATED,
-                   response_model_exclude_none=True)
+@users_router.post("/create", response_model=User, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 async def create_user(
-        request: Request,
-        *,
-        db: Session = Depends(get_db),
-        password: str = Body(...),
-        email: EmailStr = Body(...),
-        first_name: str = Body(...),
-        last_name: str = Body(...),
-        background_tasks: BackgroundTasks,
+    request: Request,
+    *,
+    db: Session = Depends(get_db),
+    password: str = Body(...),
+    email: EmailStr = Body(...),
+    first_name: str = Body(...),
+    last_name: str = Body(...),
+    role_name: str = Body(...),
+    background_tasks: BackgroundTasks,
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
     if user:
@@ -82,10 +82,27 @@ async def create_user(
     
     confirmation_code = tokens_service.create_token(db, order="email_activation", minutes=720, user_id=user.id)
     
-    send_new_account_email_activation_pwd(email_to=user.email, username=user.first_name, code=confirmation_code, password=password,
-                                          background_tasks=background_tasks,  first=True)
+    role = role_service.get_by_name(db, name=role_name)
+
+    if role is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found",
+        )
     
+    user.roles.append(role)
+
+    send_new_account_email_activation_pwd(
+        email_to=user.email,
+        username=f"{user.first_name} {user.last_name}",
+        code=verification_code,
+        password=password,
+        background_tasks=background_tasks,
+        first=True,
+    )
     db.commit()
+    db.refresh(user)  # Actualizar el objeto user con los cambios realizados en la base de datos
+    # Convertir los roles en una lista
     return user
 
 
@@ -201,6 +218,7 @@ def activate_accounts(
         authorize: AuthJWT = Depends(),
 ) -> Any:
     user = user_service.get_by_email(db, email=email)
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -234,14 +252,43 @@ def activate_accounts(
     
 
     role = "APPLICANT"
-
     
     tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role=role)
 
+
     db.commit()
     return tokens
-    
+  
+                                        
+@users_router.put('/addrol', status_code=status.HTTP_200_OK)
+def add_rol(
+    *,
+    request: Request,
+    role_name: str = Body(...),
+    email: str = Body(...),
+    db: Session = Depends(get_db),
+) -> Any:
+    user = user_service.get_by_email(db, email=email)
+    role = role_service.get_by_name(db, name=role_name)
 
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if role is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found",
+        )
+
+    user.roles.append(role)
+   
+    db.commit()
+    return {"Message":'User role asigned'}
+    
+    
 
 # --------------------------------------------
 
