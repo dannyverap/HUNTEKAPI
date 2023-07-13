@@ -1,13 +1,17 @@
+#Python
 from datetime import datetime, timedelta
+
+#FastAPI
 from fastapi import HTTPException
 from fastapi_jwt_auth import AuthJWT
 import jwt
+
+#srcUtilities
 from src.users.models import User
 from src.users.service import CRUDUser
-
 from src.config import settings
-
 from src.auth.config import AuthSettings
+from src.auth.utils import generate_access_and_refresh_tokens
 
 
 @AuthJWT.load_config
@@ -15,7 +19,7 @@ def get_config():
     return AuthSettings()
 
 
-def login(db, authorize, email, password):
+def login(db, authorize, authorization , email, password):
     user = CRUDUser(User).authenticate(db, email=email, password=password)
     if not user:
         raise HTTPException(
@@ -23,37 +27,17 @@ def login(db, authorize, email, password):
     elif not CRUDUser(User).is_active(user):
         raise HTTPException(status_code=400, detail="Inactive user")
 
-
-    access_token_expires = timedelta(
-        minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-
     # if not user.roles:
     #     role = "traveler"
     # else:
     #     role = user.roles.name
+    
+    role = "APPLICANT"
 
+    tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role=role)
+    
+    return tokens
 
-    access_token_expires = timedelta(minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-
-    # if not user.roles:
-    #     role = "traveler"
-    # else:
-    #     role = user.roles.name
-
-    # claims = {"user_info": {"role": role, "id": str(user.id)}}
-    access_token = authorize.create_access_token(
-        subject=user.email,
-        fresh=True,
-        expires_time=access_token_expires,
-
-
-        
-
-        algorithm=settings.ALGORITHM,
-    )
-    refresh_token = authorize.create_refresh_token(subject=user.email)
-
-    return {"access_token": access_token, "refresh_token": refresh_token}
 
 
 def refresh(authorize: AuthJWT, db):
