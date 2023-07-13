@@ -11,7 +11,7 @@ import datetime
 class CompanyProfile(Base):
     __tablename__ = "company_profiles"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
+
     company_logo = Column(String)
     company_description = Column(Text)
     company_why_us = Column(Text)
@@ -24,4 +24,6 @@ class CompanyProfile(Base):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow(),
     )
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
     user = relationship("User", back_populates="company_profile", uselist=False)
+    

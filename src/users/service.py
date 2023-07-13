@@ -130,6 +130,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if user.is_active:
             return True
         return False
-
-
+    
+    
 user = CRUDUser(User)

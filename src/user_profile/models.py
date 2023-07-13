@@ -9,7 +9,7 @@ import datetime
 class UserProfile(Base):
     __tablename__ = "user_profiles"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
+    
     profile_picture = Column(String)
     applications = Column(ARRAY(String))
     interviews = Column(ARRAY(String))
@@ -22,6 +22,8 @@ class UserProfile(Base):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow(),
     )
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, foreign_keys=[User.id])
     user = relationship("User", back_populates="user_profile", uselist=False)
+    
 
 ## En modelo User va :user_profile = relationship("UserProfile", uselist=False, back_populates="user")
