@@ -64,7 +64,7 @@ def get_current_user(
     )
     try:
         payload = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         user_info = payload.get("user_info", None)
         if user_info is None:

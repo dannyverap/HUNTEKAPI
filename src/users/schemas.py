@@ -35,11 +35,10 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     first_name: Optional[str]
     last_name: Optional[str] = None
-    
-   
+    roles: Optional[List[str]] = Field(default_factory=lambda: ["postulant"])
     email: EmailStr
     password: Union[str, None]
-    code: Optional[str] = None
+   
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
@@ -47,7 +46,7 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: UUID4
-    roles: Optional[List[Role]]  
+    
     created_at: datetime | None
     updated_at: datetime | None
 
