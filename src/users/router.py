@@ -73,7 +73,7 @@ async def create_user(
         else: 
             raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The user with this username already exists in the system.",
+            detail="The user already exists in the system.",
         )
 
     new_user = UserCreate(email=email, password=password,
@@ -95,7 +95,7 @@ async def create_user(
     send_new_account_email_activation_pwd(
         email_to=user.email,
         username=f"{user.first_name} {user.last_name}",
-        code=verification_code,
+        code=confirmation_code,
         password=password,
         background_tasks=background_tasks,
         first=True,
@@ -148,7 +148,7 @@ def get_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.USER["name"]
+                Role.APPLICANT["name"]
             ],
         ),
 ) -> Any:
@@ -198,7 +198,7 @@ def update_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.USER["name"]
+                Role.APPLICANT["name"]
             ],
         ),
 ) -> Any:
@@ -288,22 +288,3 @@ def add_rol(
     db.commit()
     return {"Message":'User role asigned'}
     
-    
-
-# --------------------------------------------
-
-# @users_router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
-# def create_user(
-#         *,
-#         db: Session = Depends(get_db),
-#         user_in: UserCreate,
-# ) -> Any:
-#     user = user_service.get_by_email(db, email=user_in.email)
-#     if user:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="El usuario con este correo electrónico ya existe en el sistema.",
-#         )
-
-#     new_user = user_service.create(db, obj_in=user_in)
-#     return new_user
