@@ -3,7 +3,9 @@ from src.company_profile.models import CompanyProfile
 from src.roles.models import Role, user_roles
 from src.users.models import User
 from src.token.models import Token
+
 from src.interviews.models import Interviews
+
 import sys
 import os
 from logging.config import fileConfig
