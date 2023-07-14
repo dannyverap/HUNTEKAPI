@@ -7,7 +7,7 @@ class UserProfileBase(BaseModel):
     user_id: Optional[str]
     profile_picture: Optional[str]
     applications: List[str]
-    interviews: List[str]
+    # interviews: List[str]
     responses: str
     phone_number: str
     resume: str
@@ -20,7 +20,7 @@ class UserProfileBase(BaseModel):
 class UserProfileCreate(UserProfileBase):
     profile_picture: Optional[str]
     applications: List[str]
-    interviews: List[str]
+    # interviews: List[str]
     responses: str
     phone_number: str
     resume: str

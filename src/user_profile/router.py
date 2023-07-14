@@ -37,27 +37,27 @@ def existing_profile(db: Session, user_id: str):
 
 #////////////////////////////////////////////////////////////////////////////
 
-# @user_profile_router.post("/user-profiles/{user_id}")
-# def create_user_profile(
-#     profile_data: UserProfileCreate,
-#     user_id: str,
-#     current_user: UserProfile = Depends(get_current_user),
-#     db: Session = Depends(get_db),
-#     authorize: AuthJWT = Depends()
-# ):
-#     # Aquí puedes verificar si el usuario está autenticado
-#     authenticate_user(current_user)
-#     # Verificar que el user_id corresponde al usuario autenticado
-#     validate_user_id(user_id, current_user)
-#     # Verifica si el usuario ya tiene un perfil creaddo
-#     existing_profile(db, user_id)
+@user_profile_router.post("/user-profiles/{user_id}")
+def create_user_profile(
+    profile_data: UserProfileCreate,
+    user_id: str,
+    current_user: UserProfile = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    authorize: AuthJWT = Depends()
+):
+    # Aquí puedes verificar si el usuario está autenticado
+    authenticate_user(current_user)
+    # Verificar que el user_id corresponde al usuario autenticado
+    validate_user_id(user_id, current_user)
+    # Verifica si el usuario ya tiene un perfil creaddo
+    existing_profile(db, user_id)
     
-#     profile_data.user_id = user_id
-#     # Crear el perfil de usuario utilizando el servicio
-#     created_profile = user_profile_service.create_user_profile(
-#         db, profile_data=profile_data
-#     )
-#     return created_profile
+    profile_data.user_id = user_id
+    # Crear el perfil de usuario utilizando el servicio
+    created_profile = user_profile_service.create_user_profile(
+        db, profile_data=profile_data
+    )
+    return created_profile
 
 #////////////////////////////////////////////////////////////////////////////
 
