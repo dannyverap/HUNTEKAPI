@@ -9,16 +9,6 @@ from pydantic import BaseModel, EmailStr, UUID4, Field
 # app utilities
 from src.roles.schemas import Role, UserRole
 
-# Shared properties
-# class UserBase(BaseModel):
-#     email: Optional[EmailStr] = None
-#     is_active: Optional[bool] = False
-#     full_name: Optional[str] = None
-#     is_blocked: bool | None = False
-
-#     class Config:
-#         orm_mode = True
-
 #-----------------------------
 
 class UserBase(BaseModel):
@@ -35,11 +25,10 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     first_name: Optional[str]
     last_name: Optional[str] = None
-    
     roles: Optional[List[str]] = Field(default_factory=lambda: ["postulant"])
     email: EmailStr
     password: Union[str, None]
-    code: Optional[str] = None
+   
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
