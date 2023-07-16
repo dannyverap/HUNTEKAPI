@@ -3,6 +3,9 @@ from src.company_profile.models import CompanyProfile
 from src.roles.models import Role, user_roles
 from src.users.models import User
 from src.token.models import Token
+
+from src.interviews.models import Interviews
+
 import sys
 import os
 from logging.config import fileConfig
@@ -37,6 +40,7 @@ target_metadata = Token.metadata
 # target_metadata = User.metadata
 target_metadata = UserProfile.metadata
 target_metadata = CompanyProfile.metadata
+target_metadata = Interviews.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
