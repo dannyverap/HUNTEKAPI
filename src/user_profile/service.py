@@ -10,7 +10,7 @@ class CRUDUserProfileService(CRUDBase[UserProfile, UserProfileCreate, UserProfil
             "user_id": profile_data.user_id,
             "profile_picture": profile_data.profile_picture,
             "applications": profile_data.applications,
-            "interviews": profile_data.interviews,
+            # "interviews": profile_data.interviews,
             "responses": profile_data.responses,
             "phone_number": profile_data.phone_number,
             "resume": profile_data.resume,
