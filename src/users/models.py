@@ -11,6 +11,7 @@ from src.roles.models import user_roles
 from src.token.models import user_tokens
 
 
+
 class User(Base):
     __tablename__='users'
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
@@ -21,8 +22,11 @@ class User(Base):
     is_active = Column(Boolean(), default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    tokens = relationship("Token", secondary=user_tokens, back_populates="user")
+    tokens = relationship("Token", secondary=user_tokens, back_populates="users")
     roles = relationship("Role", secondary=user_roles, back_populates="users", uselist=True, lazy="joined")
     user_profile = relationship("UserProfile", back_populates="user", uselist=False)
     company_profile = relationship("CompanyProfile", back_populates="user", uselist=False)
+
+    job_offers = relationship("JobOffer", back_populates="user")
+
 
