@@ -14,7 +14,9 @@ class JobOffer(Base):
     modality = Column(Text)  # Ejemplo: presencial
     work_schedule = Column(Text)  # Ejemplo: fulltime
     requirements = Column(Text) 
-    postulants = Column(ARRAY(String))
+
+    applications = relationship("UserProfile", secondary="job_applications",back_populates="applications")
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(
         DateTime,

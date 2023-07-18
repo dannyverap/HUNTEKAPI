@@ -29,10 +29,11 @@ def create_job_offer(
 
 
 @job_offers_router.get("/job_offers", response_model=List[JobOffersBase])
-def get_all_job_offers(db: Session = Depends(get_db)):
+def get_all_job_offers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     job_offer_service_instance = job_offer_service(db)
-    job_offers = job_offer_service_instance.get_all_job_offers()
+    job_offers = job_offer_service_instance.get_all_job_offers(skip, limit)
     return job_offers
+
 
 
 @job_offers_router.get("/job_offers/user/{user_id}", response_model=List[JobOffersBase])

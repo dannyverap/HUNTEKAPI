@@ -43,8 +43,13 @@ class job_offer_service:
         
         return new_job_offer
 
-    def get_all_job_offers(self) -> List[JobOffer]:
-        job_offers = self.db.query(JobOffer).all()
+    def get_all_job_offers(self, skip: int = 0, limit: int = 100) -> List[JobOffer]:
+        job_offers = (
+            self.db.query(JobOffer)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
         return job_offers
 
     def get_job_offers_by_user_id(self, user_id: str) -> List[JobOffer]:
