@@ -1,6 +1,6 @@
 #Python
 from datetime import datetime, timedelta
-from typing import Any, Union
+from typing import Any, Union, List, Dict
 from passlib.context import CryptContext
 from jose import jwt
 
@@ -17,28 +17,13 @@ from src.users.models import User
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# def create_access_token(
-#     subject: Union[str, Any], expires_delta: timedelta = None
-# ) -> str:
-#     if expires_delta:
-#         expire = datetime.utcnow() + expires_delta
-#     else:
-#         expire = datetime.utcnow() + timedelta(
-#             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-#         )
-#     to_encode = {"exp": expire, "sub": str(subject)}
-#     encoded_jwt = jwt.encode(
-#         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-#     return encoded_jwt
-
-
-def generate_access_and_refresh_tokens(auth: AuthJWT, user: User, role: str) -> dict:
+def generate_access_and_refresh_tokens(auth: AuthJWT, user: User, role_names: List[str]) -> Dict[str, str]:
     claims = {"user_info": {
                             "id": str(user.id),
                             "email": user.email,
                             "first_name": user.first_name,
                             "last_name": user.last_name,
-                            "role": role,
+                            "role": str(role_names),
                             }}
     
     access_token_expires = timedelta(
