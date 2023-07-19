@@ -9,8 +9,8 @@ class RoleBase(BaseModel):
 
 # Properties to receive via API on creation
 class RoleCreate(RoleBase):
-    name: Optional[str] = "APPLICANT"
-    description: Optional[str] = None
+    name: Optional[str]
+    description: Optional[str]
 
 
 # Properties to receive via API on update

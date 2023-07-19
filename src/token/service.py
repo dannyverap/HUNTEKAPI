@@ -8,12 +8,11 @@ from fastapi_jwt_auth import AuthJWT
 # SqlAlchemy
 from sqlalchemy.orm import Session
 
-# SrcUtilities
+# src utilities
 from src.auth.utils import get_password_hash, verify_password
 from src.config import settings
 from .models import Token
 from .schemas import TokenCreate
-from src.users.service import user as user_service
 
 # Pydantic
 from pydantic import UUID4
@@ -28,7 +27,7 @@ class ServiceTokens:
     def get_token_by_id(self, db: Session, *, id: UUID4) -> Optional[Token]:
         token = db.query(Token).filter_by(id=id).first()
         return token
-            
+
 
     def create_token(self, db: Session, *, order: str, minutes: int, user_id: UUID4) -> int:
         tokenToFind = self.get_token_by_user_id(db=db, user_id=user_id)

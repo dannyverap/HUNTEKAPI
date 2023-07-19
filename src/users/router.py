@@ -30,7 +30,6 @@ from src.auth.constants import AdditionalClaims as PasswordClaims
 from src.roles.service import role as role_service
 from src.token.service import token as tokens_service
 from src.auth.utils import generate_access_and_refresh_tokens
-from src.roles.utils import validate_role_name
 
 
 users_router = APIRouter()
@@ -47,6 +46,7 @@ def read_users(
     """
     Retrieve users.
     """
+    # if current_user.roles.name == Role.ADMIN["name"]:
     users = user_service.get_multi(db, skip=skip, limit=limit)
     return users
 
@@ -63,14 +63,6 @@ async def create_user(
     role_name: str = Body(...),
     background_tasks: BackgroundTasks,
 ) -> Any:
-    is_valid_role = validate_role_name(role_name=role_name)
-    print("picho")
-    if not is_valid_role:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid role name"
-        )
-        
     user = user_service.get_by_email(db, email=email)
     if user:
         if not user.is_active:
@@ -90,7 +82,15 @@ async def create_user(
     
     confirmation_code = tokens_service.create_token(db, order="email_activation", minutes=720, user_id=user.id)
     
-    user_service.add_role_to_user(db, role_name=role_name.lower(), user_id=user.id)
+    role = role_service.get_by_name(db, name=role_name)
+
+    if role is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found",
+        )
+    
+    user.roles.append(role)
 
     send_new_account_email_activation_pwd(
         email_to=user.email,
@@ -101,6 +101,8 @@ async def create_user(
         first=True,
     )
     db.commit()
+    db.refresh(user)  # Actualizar el objeto user con los cambios realizados en la base de datos
+    # Convertir los roles en una lista
     return user
 
 
