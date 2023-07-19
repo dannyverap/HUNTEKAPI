@@ -20,35 +20,38 @@ from pydantic import UUID4
 
 
 class ServiceTokens:
-    def get_token_by_user_id(self, db: Session, *, user_id: UUID4) -> Optional[Token]:
-        token = db.query(Token).filter_by(user_id=user_id).first()
+    def get_tokens_by_user_id(self, db: Session, *, user_id: UUID4) -> Optional[Token]:
+        token = db.query(Token).filter_by(user_id=user_id).all()
         return token
 
 
     def get_token_by_id(self, db: Session, *, id: UUID4) -> Optional[Token]:
         token = db.query(Token).filter_by(id=id).first()
         return token
+    
+    
+    def get_token_by_name(self, db: Session, *, user_id: UUID4, name: str) -> Optional[Token]:
+        tokenList = self.get_tokens_by_user_id(db=db, user_id=user_id)
+        for token in tokenList:
+            if token.name == name:
+                return token
+        return False
             
 
     def create_token(self, db: Session, *, order: str, minutes: int, user_id: UUID4) -> int:
-        tokenToFind = self.get_token_by_user_id(db=db, user_id=user_id)
+        tokenList = self.get_tokens_by_user_id(db=db, user_id=user_id)
         
         code = random.randint(100000, 999999)
         expiration = datetime.utcnow() + timedelta(minutes=minutes)
         
-        if tokenToFind:
-            if tokenToFind.name == "account_activation":
-                tokenToFind.code = code
-                tokenToFind.expiration = expiration
-                
+        for token in tokenList:
+            if token.name == order:
+                token.code = code
+                token.expiration = expiration
+                    
                 db.commit()
-                return tokenToFind.code
-            else:
-                tokenToFind.code = code
-                tokenToFind.expiration = expiration
+                return token.code
                 
-                db.commit()
-                return tokenToFind.code
         
         new_token = TokenCreate(name=order, code=code, expiration=expiration, user_id=user_id)
         
@@ -64,9 +67,9 @@ class ServiceTokens:
         if token:
             db.delete(token)
             db.commit()
-            return {"message": "Token deleted"}
+            return True
 
-        return {"message": "Token not found"}
+        return False
     
 
 token = ServiceTokens()
