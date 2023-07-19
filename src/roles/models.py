@@ -1,9 +1,14 @@
+# Python
 from uuid import uuid4
 
-from src.database.base import Base
+# SqlAlchemy
 from sqlalchemy import Table,Column, String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy_utils import Choice, ChoiceType
+
+# SrcUtilities
+from src.database.base import Base
 
 
 user_roles = Table(
@@ -15,8 +20,16 @@ user_roles = Table(
 
 
 class Role(Base):
+    ROLE_NAME=(
+        ("admin", "admin"),
+        ("applicant", "applicant"),
+        ("company", "company"),
+        ("company_recruiter", "company_recruiter"),
+    )
+    
     __tablename__ = "roles"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-    name = Column(String(100), index=True)
+    name = Column(ChoiceType(ROLE_NAME), default="APPLICANT")
     description = Column(Text)
-    users = relationship("User", secondary=user_roles, back_populates="roles")
+    users = relationship("User", secondary=user_roles, back_populates="roles", uselist= True, lazy="joined")
+    
