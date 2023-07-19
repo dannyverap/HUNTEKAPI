@@ -6,14 +6,14 @@ from typing import Optional, List
 
 class CRUDInterviewsService(CRUDBase[Interviews, InterviewsCreate, InterviewsUpdate]):
     def create_interviews(
-        self, db: Session,*, profile_data: InterviewsCreate) -> Interviews:
+        self, db: Session,*, interview_data: InterviewsCreate) -> Interviews:
         new_interview = {
-            "profile_id": profile_data.profile_id,
-            "interview_type": profile_data.interview_type,
-            "interview_name": profile_data.interview_name,
-            "online_link": profile_data.online_link,
-            "date": profile_data.date,
-            "notes": profile_data.notes,
+            "user_id" : interview_data.user_id,
+            "job_position": interview_data.job_position,
+            "interviewr_name": interview_data.interviewr_name,
+            "online_link": interview_data.online_link,
+            "date": interview_data.date,
+            "company_profile_id": interview_data.company_profile_id,
         }
         db_obj = Interviews(**new_interview)
         db.add(db_obj)
@@ -21,9 +21,19 @@ class CRUDInterviewsService(CRUDBase[Interviews, InterviewsCreate, InterviewsUpd
         db.refresh(db_obj)
         return db_obj
     
+    def get_all_interviews(self, db: Session) -> List[Interviews]:
+        return db.query(Interviews).all()
     
-    def get_interviews_by_profile_id(self, db: Session, profile_id: str) -> List[Interviews]:
-        return db.query(Interviews).filter(Interviews.profile_id == profile_id).all()
+    def get_interview_by_id(self, db: Session, interview_id: str) -> Optional[Interviews]:
+        return db.query(Interviews).filter(Interviews.id == interview_id).first()
+    
+    
+    def get_interviews_by_user_id(self, db: Session, user_id: str) -> List[Interviews]:
+        return db.query(Interviews).filter(Interviews.user_id== user_id).all()
+    
+    
+    def get_interviews_by_company_profile_id(self, db: Session, company_profile_id: str) -> List[Interviews]:
+        return db.query(Interviews).filter(Interviews.company_profile_id == company_profile_id).all()
     
     
     def update_interview(
