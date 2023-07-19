@@ -24,4 +24,5 @@ class Role:
     }
 
     
+    VAlLID_ROLE_NAMES =[ADMIN["name"], APPLICANT["name"], COMPANY["name"], COMPANY_RECRUITER["name"]]
    

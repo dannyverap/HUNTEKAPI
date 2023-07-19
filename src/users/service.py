@@ -10,14 +10,13 @@ from sqlalchemy.orm import Session
 
 # src utilities
 from src.auth.utils import get_password_hash, verify_password
-from src.roles.constants import Role
+from src.roles.constants import Role as RoleConstants
 from src.roles.service import role as role_service
 from src.database.base import CRUDBase
 from .models import User
 from .schemas import UserCreate, UserUpdate
-from src.roles.models import user_roles
+from src.roles.schemas import RoleCreate, Role
 from src.config import settings
-
 
 # Pydantic
 from pydantic import UUID4, EmailStr
@@ -43,12 +42,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         db_new_user = User(**new_user)
         db.add(db_new_user)
-        db.commit()
-
-        db.refresh(db_new_user)
-        # Assign default role to new user
-        # role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
-        # role.users.append(db_obj)
 
         db.commit()
         return db_new_user
@@ -78,6 +71,20 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if user.is_active:
             return True
         return False
+    
+    def add_role_to_user(self, db: Session, *, role_name: str, user_id: UUID4) -> None:
+        user = self.get_by_id(db, id=user_id)
+        role = role_service.get_by_name(db, name=role_name)
+        
+        if not role:
+            new_role = RoleCreate(name=role_name)
+            role = role_service.create_role(db, role_in=new_role)
+
+        if role not in user.roles:
+            user.roles.append(role)
+            db.commit()
+
+        
 
       
 user = CRUDUser(User)
