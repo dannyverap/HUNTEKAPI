@@ -68,6 +68,7 @@ def send_new_code(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This user is already active"
         )
+
     new_confirmation_code = tokens_service.create_token(db, order=order.lower(), minutes=720, user_id=user.id)
     
     send_new_account_email_activation_pwd(
