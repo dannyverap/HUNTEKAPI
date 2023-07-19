@@ -13,7 +13,7 @@ class UserProfile(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
     profile_picture = Column(String) 
-    applications = relationship("JobOffer", secondary="job_applications", back_populates="applications")
+    applications = relationship("JobApplication", back_populates="user_profile")
     responses = Column(Text)
     phone_number = Column(String)
     resume = Column(Text)

@@ -15,7 +15,7 @@ class JobOffer(Base):
     work_schedule = Column(Text)  # Ejemplo: fulltime
     requirements = Column(Text) 
 
-    applications = relationship("UserProfile", secondary="job_applications",back_populates="applications")
+    job_offer_applications = relationship("JobApplication", back_populates="job_offer")
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(
