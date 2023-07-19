@@ -34,7 +34,6 @@ sys.path = ['', '..'] + sys.path[1:]
 target_metadata = User.metadata
 target_metadata = Role.metadata
 target_metadata = Token.metadata
-# target_metadata = User.metadata
 target_metadata = UserProfile.metadata
 target_metadata = CompanyProfile.metadata
 

@@ -82,15 +82,19 @@ async def create_user(
     
     confirmation_code = tokens_service.create_token(db, order="email_activation", minutes=720, user_id=user.id)
     
-    role = role_service.get_by_name(db, name=role_name)
-
-    if role is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not found",
-        )
+    # role = role_service.get_by_name(db, name=role_name)
     
-    user.roles.append(role)
+    user_service.add_role_to_user(db, role_name=role_name, user_id=user.id)
+
+    # if role is None:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_404_NOT_FOUND,
+    #         detail="Role not found",
+    #     )
+    
+    
+    
+    # user.roles.append(role)
 
     send_new_account_email_activation_pwd(
         email_to=user.email,
@@ -101,7 +105,7 @@ async def create_user(
         first=True,
     )
     db.commit()
-    db.refresh(user)  # Actualizar el objeto user con los cambios realizados en la base de datos
+    # db.refresh(user)  # Actualizar el objeto user con los cambios realizados en la base de datos
     # Convertir los roles en una lista
     return user
 
