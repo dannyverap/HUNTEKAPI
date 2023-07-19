@@ -1,11 +1,17 @@
+# Python
 from typing import Optional, List
 
+# Pydantic
+from pydantic import UUID4
+
+# SqlAlchemy
+from sqlalchemy.orm import Session
+
+# SrcUtilities
 from src.database.base import CRUDBase
 from src.roles.models import Role
 from src.roles.schemas import RoleCreate, RoleUpdate
-from sqlalchemy.orm import Session
 
-from pydantic import UUID4
 
 class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[Role]:

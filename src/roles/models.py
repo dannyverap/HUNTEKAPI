@@ -1,10 +1,14 @@
+# Python
 from uuid import uuid4
 
-from src.database.base import Base
+# SqlAlchemy
 from sqlalchemy import Table,Column, String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import Choice, ChoiceType
+
+# SrcUtilities
+from src.database.base import Base
 
 
 user_roles = Table(

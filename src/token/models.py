@@ -3,10 +3,12 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 import random
 
+# SqlAlchemy
 from sqlalchemy import Table, Boolean, Column, String, DateTime, ForeignKey, ARRAY, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+# SrcUtilities
 from src.database.base import Base
 
 

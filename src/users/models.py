@@ -2,14 +2,14 @@
 import datetime
 from uuid import uuid4
 
+# sqlAlchemy
 from sqlalchemy import Table, Boolean, Column, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+# srcUtilities
 from src.database.base import Base
 from src.roles.models import Role, user_roles
-from src.token.models import Token
-
 
 
 class User(Base):

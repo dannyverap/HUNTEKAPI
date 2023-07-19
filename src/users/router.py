@@ -47,7 +47,6 @@ def read_users(
     """
     Retrieve users.
     """
-    # if current_user.roles.name == Role.ADMIN["name"]:
     users = user_service.get_multi(db, skip=skip, limit=limit)
     return users
 

@@ -22,7 +22,7 @@ from fastapi import BackgroundTasks
 # Pyjwt
 from jwt.exceptions import InvalidTokenError
 
-# src utilities
+# srcUtilities
 from src.config import settings
 from src.roles.constants import Role
 

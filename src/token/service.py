@@ -8,7 +8,7 @@ from fastapi_jwt_auth import AuthJWT
 # SqlAlchemy
 from sqlalchemy.orm import Session
 
-# src utilities
+# SrcUtilities
 from src.auth.utils import get_password_hash, verify_password
 from src.config import settings
 from .models import Token

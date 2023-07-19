@@ -17,8 +17,6 @@ from .models import User
 from .schemas import UserCreate, UserUpdate
 from src.roles.schemas import RoleCreate, Role
 from src.config import settings
-from src.roles.models import Role, user_roles
-
 
 # Pydantic
 from pydantic import UUID4, EmailStr
@@ -44,18 +42,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         db_new_user = User(**new_user)
         db.add(db_new_user)
-        # db.commit()
-
-        # db.refresh(db_new_user)
-        # # Assign default role to new user
-        # # role = role_service.get_by_name(db, name=Role.APPLICANT["name"])
-        # # role.users.append(db_obj)
-        # new_role = RoleCreate(name=role_name) 
-        # db_new_role = Role(**new_role.dict())
-        # db.add(db_new_user)
-        # db.commit()
-        
-        # user.roles.append(db_new_role)
 
         db.commit()
         return db_new_user
