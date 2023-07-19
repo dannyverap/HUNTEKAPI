@@ -21,9 +21,9 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/auth/login/access-token",
     scopes={
         Role.ADMIN["name"]: Role.ADMIN["description"],
-        Role.READ["name"]: Role.READ["description"],
-        Role.EMAIL["name"]: Role.EMAIL["description"],
-        Role.USER["name"]: Role.USER["description"],
+        Role.APPLICANT["name"]: Role.APPLICANT["description"],
+        Role.COMPANY["name"]: Role.COMPANY["description"],
+        Role.COMPANY_RECRUITER  ["name"]: Role.COMPANY_RECRUITER["description"],
     },
 )
 

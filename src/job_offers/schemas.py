@@ -3,14 +3,16 @@ from typing import List, Optional
 from datetime import datetime
 
 
-class UserProfileBase(BaseModel):
+class JobOffersBase(BaseModel):
     id: Optional[UUID4]
+    job_title: str
+    description: str
+    modality: str
+    work_schedule: str
+    requirements: str
+    postulants: Optional[List[str]] = []
     user_id: Optional[UUID4]
-    profile_picture: Optional[str]
-    applications: Optional[List[str]] = []
-    responses: str
-    phone_number: str
-    resume: str
+    company_profile_id: Optional[UUID4]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
@@ -18,12 +20,10 @@ class UserProfileBase(BaseModel):
         orm_mode = True
 
 
-class UserProfileCreate(UserProfileBase):
+class JobOffersCreate(JobOffersBase):
     pass
 
 
-class UserProfileUpdate(UserProfileBase):
+class JobOffersUpdate(JobOffersBase):
     pass
-
-
 

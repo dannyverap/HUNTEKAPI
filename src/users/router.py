@@ -16,7 +16,11 @@ from fastapi import Header, Response
 # Pydantic
 from pydantic.networks import EmailStr
 from pydantic import UUID4
+
+# SqlAlchemy
 from sqlalchemy.orm import Session
+
+# SrcUtilities
 from src.roles.constants import Role
 from src.dependencies import get_current_active_user, get_db
 from .service import user as user_service
@@ -30,6 +34,8 @@ from src.auth.constants import AdditionalClaims as PasswordClaims
 from src.roles.service import role as role_service
 from src.token.service import token as tokens_service
 from src.auth.utils import generate_access_and_refresh_tokens
+from src.roles.utils import validate_role_name
+from src.token.utils import validate_order_name
 
 
 users_router = APIRouter()
@@ -46,7 +52,6 @@ def read_users(
     """
     Retrieve users.
     """
-    # if current_user.roles.name == Role.ADMIN["name"]:
     users = user_service.get_multi(db, skip=skip, limit=limit)
     return users
 
@@ -63,6 +68,13 @@ async def create_user(
     role_name: str = Body(...),
     background_tasks: BackgroundTasks,
 ) -> Any:
+    is_valid_role = validate_role_name(role_name=role_name)
+    if not is_valid_role:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid role name"
+        )
+        
     user = user_service.get_by_email(db, email=email)
     if user:
         if not user.is_active:
@@ -73,7 +85,7 @@ async def create_user(
         else: 
             raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The user with this username already exists in the system.",
+            detail="The user already exists in the system.",
         )
 
     new_user = UserCreate(email=email, password=password,
@@ -82,63 +94,18 @@ async def create_user(
     
     confirmation_code = tokens_service.create_token(db, order="email_activation", minutes=720, user_id=user.id)
     
-    role = role_service.get_by_name(db, name=role_name)
-
-    if role is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not found",
-        )
-    
-    user.roles.append(role)
+    user_service.add_role_to_user(db, role_name=role_name.lower(), user_id=user.id)
 
     send_new_account_email_activation_pwd(
         email_to=user.email,
         username=f"{user.first_name} {user.last_name}",
-        code=verification_code,
+        code=confirmation_code,
         password=password,
         background_tasks=background_tasks,
         first=True,
     )
     db.commit()
-    db.refresh(user)  # Actualizar el objeto user con los cambios realizados en la base de datos
-    # Convertir los roles en una lista
     return user
-
-
-@users_router.put('/newcode', status_code=status.HTTP_200_OK)
-def send_new_code(
-    request: Request,
-    *,
-    db: Session = Depends(get_db),
-    email: EmailStr = Body(...),
-    order: str = Body(...),
-    background_tasks: BackgroundTasks,
-) -> Any:
-    user = user_service.get_by_email(db, email=email)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This user does not exist in the system",
-        )
-    if user.is_active and order == "account_activation":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This user is already active"
-        )
-    new_confirmation_code = tokens_service.create_token(db, order=order, minutes=720, user_id=user.id)
-    
-    send_new_account_email_activation_pwd(
-        password=user.password,
-        email_to=user.email,
-        code=new_confirmation_code,
-        background_tasks=background_tasks,
-        username=user.first_name,
-        first=True
-    )
-    
-    db.commit()
-    return {"message": "New verification code sent successfully."}
 
 
 @users_router.get("/me", response_model=User, status_code=status.HTTP_200_OK)
@@ -148,7 +115,7 @@ def get_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.USER["name"]
+                Role.APPLICANT["name"]
             ],
         ),
 ) -> Any:
@@ -198,7 +165,7 @@ def update_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.USER["name"]
+                Role.APPLICANT["name"]
             ],
         ),
 ) -> Any:
@@ -224,14 +191,19 @@ def activate_accounts(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This user does not exist in the system"
         )
+    elif user_service.is_active(user):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account already activated",
+        )
 
-    token = tokens_service.get_token_by_user_id(db, user_id=user.id)
+    token = tokens_service.get_token_by_name(db, user_id=user.id, name="account_activation")
     if not token:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Invalid code"
+            detail="Code expired or invalid"
         )
-    elif not token.code == int(code):
+    if not token.code == int(code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid code",
@@ -241,69 +213,44 @@ def activate_accounts(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="code expired",
         )
-    elif user_service.is_active(user):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Account already activated",
-        )
+   
         
     user.is_active = True
     tokens_service.delete_token(db, token_id=token.id)
-    
 
-    role = "APPLICANT"
-    
-    tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role=role)
-
+    role_names = role_service.get_by_user_id(db, user_id=user.id)
+    print(role_names)
+    tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role_names=role_names)
 
     db.commit()
     return tokens
   
                                         
-@users_router.put('/addrol', status_code=status.HTTP_200_OK)
-def add_rol(
-    *,
-    request: Request,
-    role_name: str = Body(...),
-    email: str = Body(...),
-    db: Session = Depends(get_db),
-) -> Any:
-    user = user_service.get_by_email(db, email=email)
-    role = role_service.get_by_name(db, name=role_name)
-
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    if role is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not found",
-        )
-
-    user.roles.append(role)
-   
-    db.commit()
-    return {"Message":'User role asigned'}
-    
-    
-
-# --------------------------------------------
-
-# @users_router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
-# def create_user(
-#         *,
-#         db: Session = Depends(get_db),
-#         user_in: UserCreate,
+# @users_router.put('/addrol', status_code=status.HTTP_200_OK)
+# def add_rol(
+#     *,
+#     request: Request,
+#     role_name: str = Body(...),
+#     email: str = Body(...),
+#     db: Session = Depends(get_db),
 # ) -> Any:
-#     user = user_service.get_by_email(db, email=user_in.email)
-#     if user:
+#     user = user_service.get_by_email(db, email=email)
+#     role = role_service.get_by_name(db, name=role_name)
+
+#     if user is None:
 #         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="El usuario con este correo electrónico ya existe en el sistema.",
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="User not found",
 #         )
 
-#     new_user = user_service.create(db, obj_in=user_in)
-#     return new_user
+#     if role is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Role not found",
+#         )
+
+#     user.roles.append(role)
+   
+#     db.commit()
+#     return {"Message":'User role asigned'}
+    

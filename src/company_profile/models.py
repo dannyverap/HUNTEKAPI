@@ -16,7 +16,6 @@ class CompanyProfile(Base):
     company_description = Column(Text)
     company_why_us = Column(Text)
     company_know_us_better_video = Column(Text) 
-    job_offers = Column(ARRAY(String)) ## debería ser el mismo modelo que applications de user_profile
     interviews = Column(ARRAY(String))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(
@@ -25,5 +24,7 @@ class CompanyProfile(Base):
         onupdate=datetime.datetime.utcnow(),
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
-    user = relationship("User", back_populates="company_profile", uselist=False)
+    user = relationship("User", back_populates="company_profile")
+    
+    job_offers = relationship("JobOffer", back_populates = "company_profile")## debería ser el mismo modelo que applications de user_profile
     

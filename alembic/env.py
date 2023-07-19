@@ -3,6 +3,9 @@ from src.company_profile.models import CompanyProfile
 from src.roles.models import Role, user_roles
 from src.users.models import User
 from src.token.models import Token
+from src.interviews.models import Interviews
+from src.job_offers.models import JobOffer
+from src.job_applications.models import JobApplication
 import sys
 import os
 from logging.config import fileConfig
@@ -33,10 +36,14 @@ sys.path = ['', '..'] + sys.path[1:]
 # Include main Model
 target_metadata = User.metadata
 target_metadata = Role.metadata
+target_metadata = user_roles.to_metadata
 target_metadata = Token.metadata
-# target_metadata = User.metadata
+target_metadata = User.metadata
 target_metadata = UserProfile.metadata
 target_metadata = CompanyProfile.metadata
+target_metadata = Interviews.metadata
+target_metadata = JobOffer.metadata
+target_metadata = JobApplication.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

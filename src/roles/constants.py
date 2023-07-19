@@ -3,26 +3,26 @@ class Role:
     Constants for the various roles scoped in the application ecosystem
     """
 
-    READ = {
-        "name": "read",
-        "description": "read-only access",
-    }
-
     ADMIN = {
         "name": "admin",
         "description": "admin has all permissions",
     }
 
-    EMAIL = {
-        "name": "email",
-        "description": "email-related functionalities",
+    APPLICANT = {
+        "name": "applicant",
+        "description": "applicant related permissions",
     }
 
-    USER = {
-        "name": "user",
-        "description": "user-specific data or resources",
+    COMPANY = {
+        "name": "company",
+        "description": "company related permissions",
     }
-    POSTULANT = {
-        "name": "postulant",
-        "description":"postulante para ofertas"
+
+    COMPANY_RECRUITER = {
+        "name": "company_recruiter",
+        "description": "company-recuiter related permissions",
     }
+
+    
+    VAlLID_ROLE_NAMES =[ADMIN["name"], APPLICANT["name"], COMPANY["name"], COMPANY_RECRUITER["name"]]
+   
