@@ -9,7 +9,7 @@ class UserFilesBase(BaseModel):
     user_id: Optional[UUID4]
     profile_cv: Optional[str] = None
     profile_picture: Optional[str] = None
-    created_at: datetime
+    created_at: Optional[datetime]
 
     class Config:
         orm_mode = True

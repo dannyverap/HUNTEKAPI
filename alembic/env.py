@@ -6,6 +6,7 @@ from src.token.models import Token
 from src.interviews.models import Interviews
 from src.job_offers.models import JobOffer
 from src.job_applications.models import JobApplication
+from src.files.models import UserFiles
 import sys
 import os
 from logging.config import fileConfig
@@ -44,6 +45,7 @@ target_metadata = CompanyProfile.metadata
 target_metadata = Interviews.metadata
 target_metadata = JobOffer.metadata
 target_metadata = JobApplication.metadata
+target_metadata = UserFiles.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
