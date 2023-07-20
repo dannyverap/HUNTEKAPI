@@ -16,7 +16,11 @@ from fastapi import Header, Response
 # Pydantic
 from pydantic.networks import EmailStr
 from pydantic import UUID4
+
+# SqlAlchemy
 from sqlalchemy.orm import Session
+
+# SrcUtilities
 from src.roles.constants import Role
 from src.dependencies import get_current_active_user, get_db
 from .service import user as user_service
@@ -31,6 +35,7 @@ from src.roles.service import role as role_service
 from src.token.service import token as tokens_service
 from src.auth.utils import generate_access_and_refresh_tokens
 from src.roles.utils import validate_role_name
+from src.token.utils import validate_order_name
 
 
 users_router = APIRouter()
@@ -64,11 +69,10 @@ async def create_user(
     background_tasks: BackgroundTasks,
 ) -> Any:
     is_valid_role = validate_role_name(role_name=role_name)
-    print("picho")
     if not is_valid_role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid role name"
+            detail="Invalid role name"
         )
         
     user = user_service.get_by_email(db, email=email)
@@ -102,41 +106,6 @@ async def create_user(
     )
     db.commit()
     return user
-
-
-@users_router.put('/newcode', status_code=status.HTTP_200_OK)
-def send_new_code(
-    request: Request,
-    *,
-    db: Session = Depends(get_db),
-    email: EmailStr = Body(...),
-    order: str = Body(...),
-    background_tasks: BackgroundTasks,
-) -> Any:
-    user = user_service.get_by_email(db, email=email)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This user does not exist in the system",
-        )
-    if user.is_active and order == "account_activation":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This user is already active"
-        )
-    new_confirmation_code = tokens_service.create_token(db, order=order, minutes=720, user_id=user.id)
-    
-    send_new_account_email_activation_pwd(
-        password=user.password,
-        email_to=user.email,
-        code=new_confirmation_code,
-        background_tasks=background_tasks,
-        username=user.first_name,
-        first=True
-    )
-    
-    db.commit()
-    return {"message": "New verification code sent successfully."}
 
 
 @users_router.get("/me", response_model=User, status_code=status.HTTP_200_OK)
@@ -222,14 +191,19 @@ def activate_accounts(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This user does not exist in the system"
         )
+    elif user_service.is_active(user):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account already activated",
+        )
 
-    token = tokens_service.get_token_by_user_id(db, user_id=user.id)
+    token = tokens_service.get_token_by_name(db, user_id=user.id, name="account_activation")
     if not token:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Invalid code"
+            detail="Code expired or invalid"
         )
-    elif not token.code == int(code):
+    if not token.code == int(code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid code",
@@ -239,50 +213,44 @@ def activate_accounts(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="code expired",
         )
-    elif user_service.is_active(user):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Account already activated",
-        )
+   
         
     user.is_active = True
     tokens_service.delete_token(db, token_id=token.id)
-    
 
-    role = "APPLICANT"
-    
-    tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role=role)
-
+    role_names = role_service.get_by_user_id(db, user_id=user.id)
+    print(role_names)
+    tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role_names=role_names)
 
     db.commit()
     return tokens
   
                                         
-@users_router.put('/addrol', status_code=status.HTTP_200_OK)
-def add_rol(
-    *,
-    request: Request,
-    role_name: str = Body(...),
-    email: str = Body(...),
-    db: Session = Depends(get_db),
-) -> Any:
-    user = user_service.get_by_email(db, email=email)
-    role = role_service.get_by_name(db, name=role_name)
+# @users_router.put('/addrol', status_code=status.HTTP_200_OK)
+# def add_rol(
+#     *,
+#     request: Request,
+#     role_name: str = Body(...),
+#     email: str = Body(...),
+#     db: Session = Depends(get_db),
+# ) -> Any:
+#     user = user_service.get_by_email(db, email=email)
+#     role = role_service.get_by_name(db, name=role_name)
 
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+#     if user is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="User not found",
+#         )
 
-    if role is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not found",
-        )
+#     if role is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Role not found",
+#         )
 
-    user.roles.append(role)
+#     user.roles.append(role)
    
-    db.commit()
-    return {"Message":'User role asigned'}
+#     db.commit()
+#     return {"Message":'User role asigned'}
     

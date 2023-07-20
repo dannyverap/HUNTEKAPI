@@ -85,7 +85,11 @@ def test_token():
 
 
 @auth_router.get("/password/recovery/{email}")
-def password_recovery(email: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db),):
+def password_recovery(
+    email: str, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db),
+    ) -> JSONResponse:
     user = user_service.get_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
