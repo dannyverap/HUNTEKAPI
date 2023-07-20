@@ -92,7 +92,7 @@ async def create_user(
                           first_name=first_name, last_name=last_name)
     user = user_service.create(db, user=new_user)
     
-    confirmation_code = tokens_service.create_token(db, order="email_activation", minutes=720, user_id=user.id)
+    confirmation_code = tokens_service.create_token(db, order="account_activation", minutes=720, user_id=user.id)
     
     user_service.add_role_to_user(db, role_name=role_name.lower(), user_id=user.id)
 
@@ -115,7 +115,8 @@ def get_current_user(
             get_current_active_user,
             scopes=[
                 Role.ADMIN["name"],
-                Role.APPLICANT["name"]
+                Role.APPLICANT["name"],
+                Role.COMPANY["name"],
             ],
         ),
 ) -> Any:
@@ -219,10 +220,12 @@ def activate_accounts(
     tokens_service.delete_token(db, token_id=token.id)
 
     role_names = role_service.get_by_user_id(db, user_id=user.id)
-    print(role_names)
     tokens = generate_access_and_refresh_tokens(auth=authorize, user=user, role_names=role_names)
 
     db.commit()
+    # user_dict = user.__dict__
+    # response = JSONResponse(content=user_dict, headers=tokens)
+    
     return tokens
   
                                         

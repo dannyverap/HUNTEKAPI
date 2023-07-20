@@ -27,4 +27,4 @@ class CompanyProfile(Base):
     user = relationship("User", back_populates="company_profile")
     
     job_offers = relationship("JobOffer", back_populates = "company_profile")## debería ser el mismo modelo que applications de user_profile
-    
+    interviews = relationship("Interviews", back_populates="company_profile")

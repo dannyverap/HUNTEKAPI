@@ -8,14 +8,16 @@ import datetime
 class Interviews(Base):
     __tablename__ = "interviews"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-    profile_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"))
-    interview_type = Column(String)
-    interview_name = Column(String)
+    job_position = Column(String)
+    interviewr_name = Column(String)
     online_link = Column(String)
     date = Column(DateTime)
-    notes = Column(Text)
 
-    user_profile = relationship("UserProfile", back_populates="interviews")
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
+    users = relationship("User", back_populates="interviews")
+    
+    company_profile_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id"))
+    company_profile = relationship("CompanyProfile", back_populates="interviews")
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(
