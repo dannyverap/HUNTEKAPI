@@ -25,4 +25,4 @@ class UserProfile(Base):
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True ) #foreign_keys=[User.id]
     user = relationship("User", back_populates="user_profile", uselist=False)
-    interviews = relationship("Interviews", back_populates="user_profile", uselist=False)
+    

@@ -30,5 +30,7 @@ class User(Base):
     company_profile = relationship("CompanyProfile", back_populates="user", uselist=False)
 
     job_offers = relationship("JobOffer", back_populates="user")
+    interviews = relationship("Interviews", back_populates="users", uselist=False)
+    user_files = relationship("UserFiles", back_populates="users")
 
 

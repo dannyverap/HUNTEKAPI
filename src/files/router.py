@@ -1,37 +1,50 @@
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from src.files.schemas import UserFilesCreate
 from sqlalchemy.orm import Session
 from src.dependencies import get_db
 from src.files.service import user_files_service
-from src.files.schemas import UserFilesBase, UserFilesCreate, UserFilesUpdate
+import boto3
+import os
 
 files_router = APIRouter()
 
-@files_router.post("/archivos_usuario/", response_model=UserFilesBase)
-def crear_archivo_usuario(
-    user_file_data: UserFilesCreate, db: Session = Depends(get_db)
-):
-    return user_files_service.create_user_file(db, user_file_data=user_file_data)
 
-@files_router.get("/archivos_usuario/{user_id}", response_model=UserFilesBase)
-def leer_archivo_usuario(user_id: str, db: Session = Depends(get_db)):
-    user_file = user_files_service.get_user_file_by_user_id(db, user_id)
-    if user_file is None:
-        raise HTTPException(status_code=404, detail="Archivo de usuario no encontrado")
-    return user_file
+AWS_BUCKET_NAME = "your-aws-bucket-name"
+AWS_REGION_NAME = "your-aws-region-name"
+AWS_ACCESS_KEY_ID = "your-aws-access-key-id"
+AWS_SECRET_ACCESS_KEY = "your-aws-secret-access-key"
 
-@files_router.put("/archivos_usuario/{user_id}", response_model=UserFilesBase)
-def actualizar_archivo_usuario(
-    user_id: str, user_file_data: UserFilesUpdate, db: Session = Depends(get_db)
-):
-    updated_user_file = user_files_service.update_user_file(db, user_id, user_file_data)
-    if updated_user_file is None:
-        raise HTTPException(status_code=404, detail="Archivo de usuario no encontrado")
-    return updated_user_file
+# Función para subir el archivo al bucket de S3 y obtener la URL
+def upload_file_to_s3(file: UploadFile, folder_name: str):
+    s3 = boto3.client(
+        "s3",
+        region_name=AWS_REGION_NAME,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
 
-@files_router.delete("/archivos_usuario/{user_id}", response_model=UserFilesBase)
-def eliminar_archivo_usuario(user_id: str, db: Session = Depends(get_db)):
-    deleted_user_file = user_files_service.delete_user_file(db, user_id)
-    if deleted_user_file is None:
-        raise HTTPException(status_code=404, detail="Archivo de usuario no encontrado")
-    return deleted_user_file
+    file_name = f"{folder_name}/{file.filename}"
+    s3.upload_fileobj(file.file, AWS_BUCKET_NAME, file_name)
+
+    url = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{file_name}"
+    return url
+
+@files_router.post("/upload/")
+async def upload_files(user_id: str, cv: UploadFile = File(None), profile_picture: UploadFile = File(None)):
+    db = get_db()
+
+    user_files_data = UserFilesCreate(user_id=user_id)
+
+    if cv:
+        cv_url = upload_file_to_s3(cv, folder_name="cv")
+        user_files_data.profile_cv = cv_url
+
+    if profile_picture:
+        profile_picture_url = upload_file_to_s3(profile_picture, folder_name="profile_picture")
+        user_files_data.profile_picture = profile_picture_url
+
+    # Guardar la información en la base de datos utilizando el servicio CRUDUserFilesService
+    user_files_service.create_user_file(db=db, user_file_data=user_files_data)
+
+    return {"message": "Files uploaded successfully."}
+
