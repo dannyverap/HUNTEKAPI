@@ -32,6 +32,7 @@ class ServiceTokens:
     
     def get_token_by_name(self, db: Session, *, user_id: UUID4, name: str) -> Optional[Token]:
         tokenList = self.get_tokens_by_user_id(db=db, user_id=user_id)
+    
         for token in tokenList:
             if token.name == name:
                 return token
