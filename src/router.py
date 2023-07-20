@@ -11,9 +11,11 @@ from src.job_offers.router import job_offers_router
 from src.interviews.router import interviews_router
 from src.job_applications.router import job_applications_router
 from src.token.router import tokens_router
+from src.files.router import files_router
 
 
 api_router = APIRouter()
+
 api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 api_router.include_router(utils_router, prefix="/utils", tags=["Utils"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
@@ -24,3 +26,5 @@ api_router.include_router(company_profile_router, prefix="/companyprofile", tags
 api_router.include_router(job_offers_router,prefix="/joboffers",tags=["JobOffers"])
 api_router.include_router(interviews_router, prefix="/interviews", tags=["Interviews"])
 api_router.include_router(job_applications_router, prefix="/jobapplications", tags=["JobApplications"])
+api_router.include_router(files_router, prefix="/files", tags=["Files"])
+

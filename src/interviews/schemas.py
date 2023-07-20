@@ -1,17 +1,21 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 from datetime import datetime
-from uuid import UUID
 from typing import Optional
 
 
 class InterviewsBase(BaseModel):
-    profile_id: Optional[UUID]
-    interview_type: str
-    interview_name: str
+    id: Optional[UUID4]
+    user_id: Optional[UUID4]
+    company_profile_id: Optional[UUID4]
+    job_position: str
+    interviewr_name: str
     online_link: str
     date: datetime
-    notes: str
-
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        orm_mode = True
+    
 
 class InterviewsCreate(InterviewsBase):
     pass
@@ -19,13 +23,4 @@ class InterviewsCreate(InterviewsBase):
 
 class InterviewsUpdate(InterviewsBase):
     pass
-
-
-class Interviews(InterviewsBase):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
 
