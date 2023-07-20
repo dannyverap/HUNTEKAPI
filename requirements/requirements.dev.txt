@@ -30,3 +30,4 @@ ics
 typer[all]
 gunicorn
 Unidecode
+boto3==1.18.41
