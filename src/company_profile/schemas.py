@@ -10,8 +10,8 @@ class CompanyProfileBase(BaseModel):
     company_description: str
     company_why_us: str
     company_know_us_better_video: str
-    job_offers: List[str]
-    interviews: List[str]
+    job_offers: Optional[List[str]]
+    interviews: Optional[List[str]]
     created_at: datetime
     updated_at: datetime
 
