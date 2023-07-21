@@ -32,4 +32,3 @@ class Role(Base):
     name = Column(ChoiceType(ROLE_NAME), default="APPLICANT")
     description = Column(Text)
     users = relationship("User", secondary=user_roles, back_populates="roles", uselist= True, lazy="joined")
-    
